@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beboy’s Flower Garden Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* One visual world: a floating flower-garden island in a pastel sky.
+     Layout: full-bleed 3D scene, title card top-left, control dock bottom-centre. */
+  --rose: #e2508a;
+  --rose-deep: #b3346a;
+  --blush: #fbe3ee;
+  --lilac: #7d5cc0;
+  --ink: #4a1f3d;
+  --panel: rgba(255, 248, 251, 0.88);
+  --display: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+  --body: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--blush);
+  color: var(--ink);
+  font-family: var(--body);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+#scene { position: fixed; inset: 0; touch-action: none; }
+#scene canvas { display: block; width: 100%; height: 100%; outline: none; }
+
+.hud {
+  position: fixed; inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px; padding: 16px;
+  pointer-events: none;
+}
+.panel {
+  pointer-events: auto;
+  box-sizing: border-box;
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(150, 40, 95, 0.16);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.card {
+  grid-column: 1; grid-row: 1; align-self: start;
+  max-width: 330px;
+  padding: 14px 18px 15px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.card h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: 34px; line-height: 1.05; margin: 0;
+  color: var(--rose-deep); text-wrap: balance;
+}
+.card p { margin: 0; font-size: 14px; line-height: 1.45; }
+.status { color: #9e1f4f; font-weight: 800; }
+
+.tour {
+  grid-column: 3; grid-row: 1 / span 2; align-self: start;
+  width: 216px; max-height: 100%; overflow-y: auto;
+  padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.tour h2 {
+  margin: 0; font-family: var(--display); font-weight: 700;
+  font-size: 26px; line-height: 1.1; color: var(--rose-deep); text-wrap: balance;
+}
+.spots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.spots .go-tour { grid-column: 1 / -1; }
+.tip { margin: 0; font-size: 12.5px; line-height: 1.4; }
+
+.dock {
+  grid-column: 1 / -1; grid-row: 3; justify-self: center;
+  max-width: 100%;
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center;
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border-radius: 22px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; font-weight: 800; letter-spacing: 0.02em; color: var(--lilac); padding-left: 6px; }
+.field input {
+  font: inherit; font-weight: 800; font-size: 15px;
+  width: 170px; box-sizing: border-box;
+  padding: 9px 14px; border-radius: 999px;
+  border: 2px solid #f1bfd4; background: #fff; color: var(--ink);
+}
+.field input::placeholder { color: #b98aa6; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.hud button {
+  font: inherit; font-weight: 800; font-size: 14px;
+  padding: 10px 16px; border-radius: 999px;
+  border: 2px solid #f1bfd4; background: #fff; color: var(--ink);
+  cursor: pointer; transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.spots button { font-size: 13px; padding: 8px 10px; }
+.hud button:hover { background: #fff0f6; transform: translateY(-1px); }
+.hud button.primary { background: var(--rose); border-color: var(--rose); color: #fff; }
+.hud button.primary:hover { background: var(--rose-deep); border-color: var(--rose-deep); }
+.hud button[aria-current="true"] { background: #fde3ee; border-color: var(--rose); color: var(--rose-deep); }
+.hud button:disabled { opacity: 0.6; cursor: default; transform: none; }
+.hud button:focus-visible, .field input:focus-visible { outline: 3px solid var(--lilac); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 860px) {
+  .card { max-width: 270px; }
+  .card h1 { font-size: 29px; }
+  .tour { width: 196px; }
+}
+@media (max-width: 600px) {
+  .hud { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; gap: 8px; padding: 10px; }
+  .card { grid-column: 1; grid-row: 1; max-width: none; padding: 10px 14px; gap: 4px; }
+  .card h1 { font-size: 26px; }
+  .tour { grid-column: 1; grid-row: 3; width: auto; max-height: none; overflow: visible; padding: 8px; gap: 0; border-radius: 16px; }
+  .tour h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .tour .tip { display: none; }
+  .spots { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; scrollbar-width: none; }
+  .spots::-webkit-scrollbar { display: none; }
+  .spots button { flex: none; }
+  .dock { grid-column: 1; grid-row: 4; justify-self: stretch; padding: 10px; gap: 8px; border-radius: 18px; }
+  .field, .field input { width: 100%; }
+  .actions button { padding: 9px 12px; font-size: 13px; }
+}
+@media (max-height: 560px) and (min-width: 601px) {
+  .tour .tip { display: none; }
+  .spots button { padding: 6px 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud button { transition: none; }
+  .hud button:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+<div id="scene" role="img" aria-label="A 3D floating garden island set for a girl's birthday party: a flower arch with a Happy Birthday banner, a three-tier cake with candles, cupcakes, presents, balloons, cherry blossom trees, flower beds of roses, tulips and daisies, and the birthday girl in a pink petal dress and flower crown, who can walk to every spot."></div>
+
+<div class="hud">
+  <header class="card panel">
+    <h1 id="heading">Beboy’s Flower Garden Birthday</h1>
+    <p id="status" class="status" hidden></p>
+  </header>
+
+  <nav class="tour panel" aria-labelledby="tourTitle">
+    <h2 id="tourTitle">Walk with <span class="girl-name">Beboy</span></h2>
+    <div class="spots">
+      <button type="button" id="tourBtn" class="primary go-tour">Take the tour</button>
+      <button type="button" data-spot="path">Garden path</button>
+      <button type="button" data-spot="wish">Birthday wish</button>
+      <button type="button" data-spot="presents">Presents</button>
+      <button type="button" data-spot="cake">The cake</button>
+      <button type="button" data-spot="balloons">Balloons</button>
+      <button type="button" data-spot="arch">Flower arch</button>
+      <button type="button" data-spot="secret">Secret garden</button>
+      <button type="button" data-spot="trees">Cherry trees</button>
+      <button type="button" data-spot="flowers">Flower beds</button>
+      <button type="button" data-spot="overview">Whole party</button>
+    </div>
+    <p class="tip">Arrow keys or WASD walk her around too.</p>
+    <p id="live" class="sr-only" aria-live="polite"></p>
+  </nav>
+
+  <div class="dock panel" id="dock">
+    <div class="actions">
+      <button type="button" id="wish" class="primary">Blow out the candles</button>
+      <button type="button" id="song">Play the song</button>
+      <button type="button" id="confetti">Confetti</button>
+      <button type="button" id="spin">Stop spinning</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var statusEl = document.getElementById('status');
+  function fail(msg) { statusEl.textContent = msg; statusEl.hidden = false; }
+  if (!window.THREE || !THREE.OrbitControls) {
+    fail('The 3D scene could not load. Check your internet connection, then reload the page.');
+    return;
+  }
+
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+  } catch (e) {
+    fail('This browser could not start 3D graphics (WebGL). Try another browser or device.');
+    return;
+  }
+
+  // ---------------------------------------------------------------- helpers
+  var seed = 20261116;
+  function rnd() { // deterministic layout, same garden every visit
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function R(a, b) { return a + rnd() * (b - a); }
+  function P(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+  function C(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function pickR(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  var TAU = Math.PI * 2;
+  var V3 = THREE.Vector3;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function canvas(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  function canvasTex(c, repX, repY) {
+    var t = new THREE.CanvasTexture(c);
+    t.encoding = THREE.sRGBEncoding;
+    if (repX) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repX, repY || repX); }
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  }
+
+  // ---------------------------------------------------------------- renderer, scene, camera
+  var host = document.getElementById('scene');
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  host.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  (function sky() {
+    var c = canvas(4, 512), g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 0, 512);
+    gr.addColorStop(0, '#f3b9d3');
+    gr.addColorStop(0.42, '#ead6f7');
+    gr.addColorStop(0.78, '#fde6ee');
+    gr.addColorStop(1, '#ffe3d3');
+    g.fillStyle = gr; g.fillRect(0, 0, 4, 512);
+    scene.background = canvasTex(c);
+  })();
+
+  var aspect0 = window.innerWidth / window.innerHeight;
+  var camera = new THREE.PerspectiveCamera(42, aspect0, 0.1, 300);
+  var target = new V3(0, 2.6, 0);
+  var k = aspect0 < 1 ? Math.min(1.9, 0.85 / aspect0) : 1;
+  camera.position.set(0, 5.8 * k, 20.5 * k).add(target);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.copy(target);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enablePan = false;
+  controls.minDistance = 7;
+  controls.maxDistance = 48;
+  controls.minPolarAngle = Math.PI * 0.08;
+  controls.maxPolarAngle = Math.PI * 0.58;
+  controls.autoRotate = !reduceMotion;
+  controls.autoRotateSpeed = 0.55;
+
+  // lights
+  scene.add(new THREE.HemisphereLight(C(0xfff3f9), C(0x93c97c), 0.55));
+  scene.add(new THREE.AmbientLight(C(0xffe6f0), 0.16));
+  var sun = new THREE.DirectionalLight(C(0xfff0df), 0.82);
+  sun.position.set(9, 16, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  var sc = sun.shadow.camera;
+  sc.left = -15; sc.right = 15; sc.top = 15; sc.bottom = -15; sc.near = 1; sc.far = 60;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.03;
+  scene.add(sun);
+
+  // soft environment for shiny balloons and gold
+  var envTex = (function () {
+    var c = canvas(16, 256), g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.25, '#f8cfe0'); gr.addColorStop(0.5, '#e7d6f6');
+    gr.addColorStop(0.62, '#cfe9bd'); gr.addColorStop(1, '#8fc77a');
+    g.fillStyle = gr; g.fillRect(0, 0, 16, 256);
+    var es = new THREE.Scene();
+    var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+    es.add(new THREE.Mesh(new THREE.SphereGeometry(20, 32, 16), new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide })));
+    var panel = new THREE.Mesh(new THREE.PlaneGeometry(14, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+    panel.position.set(6, 12, 8); panel.lookAt(0, 0, 0); es.add(panel);
+    var panel2 = panel.clone(); panel2.position.set(-10, 6, -6); panel2.lookAt(0, 0, 0); es.add(panel2);
+    var pm = new THREE.PMREMGenerator(renderer);
+    var rt = pm.fromScene(es, 0.02);
+    pm.dispose();
+    return rt.texture;
+  })();
+
+  // material cache
+  var matCache = {};
+  function mat(hex, opts) {
+    opts = opts || {};
+    var key = hex + JSON.stringify(opts);
+    if (!matCache[key]) {
+      var o = { color: C(hex), roughness: 0.7, metalness: 0 };
+      for (var k2 in opts) o[k2] = opts[k2];
+      matCache[key] = new THREE.MeshStandardMaterial(o);
+    }
+    return matCache[key];
+  }
+  function mesh(geo, material, x, y, z, parent) {
+    var m = new THREE.Mesh(geo, material);
+    m.position.set(x || 0, y || 0, z || 0);
+    m.castShadow = true; m.receiveShadow = true;
+    (parent || scene).add(m);
+    return m;
+  }
+
+  // instancing: every repeated little part (petals, beads, leaves) goes into one draw call per kind
+  var WHITE = new THREE.Color(1, 1, 1);
+  var flowerMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.62, side: THREE.DoubleSide });
+  var solidMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+  var flatMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.82, flatShading: true });
+  var parts = {};
+  function definePart(name, geo, material) { parts[name] = { geo: geo, material: material, items: [] }; }
+  function put(name, m, c) { parts[name].items.push(m, c || WHITE); }
+  var _o = new THREE.Object3D();
+  function M(x, y, z, rx, ry, rz, sx, sy, sz) {
+    _o.position.set(x || 0, y || 0, z || 0);
+    _o.rotation.set(rx || 0, ry || 0, rz || 0);
+    var s = sx === undefined ? 1 : sx;
+    _o.scale.set(s, sy === undefined ? s : sy, sz === undefined ? s : sz);
+    _o.updateMatrix();
+    return _o.matrix.clone();
+  }
+  function mul(a, b) { return a.clone().multiply(b); }
+  function buildParts() {
+    Object.keys(parts).forEach(function (name) {
+      var p = parts[name], n = p.items.length / 2;
+      if (!n) return;
+      var im = new THREE.InstancedMesh(p.geo, p.material, n);
+      for (var i = 0; i < n; i++) { im.setMatrixAt(i, p.items[2 * i]); im.setColorAt(i, p.items[2 * i + 1]); }
+      im.castShadow = true; im.receiveShadow = true; im.frustumCulled = false;
+      scene.add(im);
+    });
+  }
+
+  // petal-cup geometry with scalloped rims, used for roses and tulips
+  function petalLathe(points, segs, lobes, amp, lift) {
+    var g = new THREE.LatheGeometry(points.map(function (p) { return new THREE.Vector2(p[0], p[1]); }), segs);
+    var pos = g.attributes.position, h = points[points.length - 1][1];
+    for (var i = 0; i < pos.count; i++) {
+      var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      var a = Math.atan2(z, x), f = Math.pow(Math.max(0, y) / h, 2), w = Math.sin(a * lobes);
+      var kk = 1 + amp * f * w;
+      pos.setXYZ(i, x * kk, y + lift * f * Math.max(0, w), z * kk);
+    }
+    g.computeVertexNormals();
+    return g;
+  }
+
+  var unitSphere = new THREE.SphereGeometry(1, 10, 8);
+  definePart('stem', new THREE.CylinderGeometry(0.022, 0.03, 1, 5).translate(0, 0.5, 0), solidMat);
+  definePart('leaf', new THREE.SphereGeometry(1, 8, 6).scale(0.07, 0.26, 0.02).translate(0, 0.26, 0), flowerMat);
+  definePart('petal', new THREE.SphereGeometry(1, 8, 6).scale(0.055, 0.018, 0.15).translate(0, 0, 0.17), flowerMat);
+  definePart('center', new THREE.SphereGeometry(0.08, 12, 8).scale(1, 0.55, 1), solidMat);
+  definePart('roseOuter', petalLathe([[0.02, 0], [0.1, 0.015], [0.17, 0.05], [0.215, 0.09], [0.25, 0.125]], 20, 5, 0.13, 0.02), flowerMat);
+  definePart('roseMid', petalLathe([[0.02, 0.01], [0.08, 0.03], [0.13, 0.08], [0.155, 0.14], [0.16, 0.17]], 18, 5, 0.1, 0.015), flowerMat);
+  definePart('roseInner', petalLathe([[0.01, 0.03], [0.06, 0.06], [0.095, 0.12], [0.105, 0.18], [0.092, 0.205]], 16, 3, 0.16, 0.01), flowerMat);
+  definePart('bud', new THREE.SphereGeometry(0.068, 12, 10).scale(1, 1.15, 1).translate(0, 0.15, 0), solidMat);
+  definePart('tulip', petalLathe([[0.01, 0], [0.07, 0.02], [0.13, 0.08], [0.155, 0.17], [0.15, 0.27], [0.125, 0.36]], 18, 3, 0.1, 0.06), flowerMat);
+  definePart('pom', new THREE.IcosahedronGeometry(0.2, 1), flatMat);
+  definePart('baby', new THREE.SphereGeometry(0.035, 6, 5), solidMat);
+  definePart('tuft', new THREE.ConeGeometry(0.045, 0.28, 4).translate(0, 0.14, 0), flatMat);
+  definePart('bead', unitSphere, solidMat);
+  definePart('drip', unitSphere, solidMat);
+  definePart('blossom', new THREE.IcosahedronGeometry(0.09, 0), flatMat);
+  definePart('wrapper', new THREE.CylinderGeometry(0.17, 0.12, 0.2, 16), flatMat);
+  definePart('frost', new THREE.TorusGeometry(1, 0.55, 10, 20).rotateX(Math.PI / 2), solidMat);
+  definePart('tip', new THREE.ConeGeometry(0.07, 0.14, 12), solidMat);
+
+  // palettes
+  var ROSE_COLS = [0xf06a9b, 0xf9a8c6, 0xffc1a6, 0xfff4f6, 0xd94f7d, 0xfbe3a2];
+  var TULIP_COLS = [0xf27aa5, 0xff9b8a, 0xc79ae8, 0xffd36e, 0xfff0f5, 0xe8558a];
+  var DAISY_COLS = [0xffffff, 0xffd6e7, 0xe9d6ff, 0xfff3c4];
+  var POM_COLS = [0xc7a6ec, 0xa9c3f2, 0xf7b6d2, 0xfff5fa, 0xd8b4f0];
+  var LEAF_COLS = [0x5f9e57, 0x6fb265, 0x4e8a49, 0x78b86a];
+  var PARTY_COLS = [0xf27aa5, 0xffd166, 0xc9a7ef, 0xa8e6cf, 0xffc4a3, 0xffffff, 0xe2508a];
+  function leafC() { return C(P(LEAF_COLS)); }
+
+  // ---------------------------------------------------------------- flower builders
+  function stemAndLeaves(base, h, leafScale) {
+    put('stem', mul(base, M(0, 0, 0, 0, 0, 0, 1, h, 1)), C(0x5a9a52));
+    var n = rnd() < 0.55 ? 2 : 1;
+    for (var i = 0; i < n; i++) put('leaf', mul(base, M(0, 0.02, 0, 0, R(0, TAU), R(0.5, 1.1), leafScale * R(0.8, 1.15))), leafC());
+  }
+  function roseHead(m, c) {
+    put('roseOuter', m, c.clone().multiplyScalar(0.86));
+    put('roseMid', mul(m, M(0, 0, 0, 0, 0.63, 0)), c);
+    put('roseInner', mul(m, M(0, 0, 0, 0, 1.3, 0)), c.clone().lerp(WHITE, 0.08));
+    put('bud', m, c.clone().multiplyScalar(0.92));
+  }
+  function plant(type, x, z, hex) {
+    var s, h, base, head;
+    if (type === 'rose') {
+      s = R(0.85, 1.15); h = R(0.45, 0.8);
+      base = M(x, 0, z, 0, R(0, TAU), 0, s); stemAndLeaves(base, h, 1);
+      roseHead(mul(base, M(0, h, 0, R(-0.3, 0.3), R(0, TAU), R(-0.3, 0.3))), C(hex));
+    } else if (type === 'tulip') {
+      s = R(0.9, 1.2); h = R(0.5, 0.85);
+      base = M(x, 0, z, 0, R(0, TAU), 0, s); stemAndLeaves(base, h, 1.6);
+      put('tulip', mul(base, M(0, h, 0, R(-0.15, 0.15), R(0, TAU), R(-0.15, 0.15))), C(hex));
+    } else if (type === 'daisy') {
+      s = R(0.65, 0.9); h = R(0.3, 0.6);
+      base = M(x, 0, z, 0, R(0, TAU), 0, s); stemAndLeaves(base, h, 0.9);
+      head = mul(base, M(0, h, 0, R(-0.35, 0.35), 0, R(-0.35, 0.35)));
+      put('center', mul(head, M(0, 0.015, 0)), C(0xffc93c));
+      var off = R(0, 1), n = 11, pc = C(hex);
+      for (var i = 0; i < n; i++) put('petal', mul(mul(head, M(0, 0, 0, 0, off + i * TAU / n, 0)), M(0, 0, 0, -0.2, 0, 0)), pc);
+    } else {
+      s = R(0.8, 1.25); h = R(0.35, 0.7);
+      base = M(x, 0, z, 0, R(0, TAU), 0, s); stemAndLeaves(base, h, 1);
+      put('pom', mul(base, M(0, h + 0.12, 0, R(0, 3), R(0, 3), 0)), C(hex));
+    }
+  }
+
+  // ---------------------------------------------------------------- floating island
+  var ISLAND = 13, DECK = 0.08, DECK_R = 4.6, STONES = [];
+  (function island() {
+    var c = canvas(512, 512), g = c.getContext('2d');
+    g.fillStyle = '#9ccf7c'; g.fillRect(0, 0, 512, 512);
+    for (var i = 0; i < 9000; i++) {
+      var x = rnd() * 512, y = rnd() * 512;
+      g.strokeStyle = rnd() < 0.5 ? 'rgba(112,176,90,0.55)' : 'rgba(188,226,152,0.5)';
+      g.lineWidth = 1 + rnd();
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + R(-2, 2), y - R(2, 5)); g.stroke();
+    }
+    for (var j = 0; j < 220; j++) {
+      g.fillStyle = rnd() < 0.6 ? 'rgba(255,255,255,0.9)' : 'rgba(255,190,215,0.9)';
+      g.beginPath(); g.arc(rnd() * 512, rnd() * 512, R(1, 2), 0, TAU); g.fill();
+    }
+    var grass = new THREE.MeshStandardMaterial({ map: canvasTex(c), roughness: 0.95 });
+    var top = mesh(new THREE.CylinderGeometry(ISLAND, ISLAND - 0.1, 0.6, 96), grass, 0, -0.3, 0);
+    top.castShadow = false;
+    var soil = mesh(new THREE.CylinderGeometry(ISLAND - 0.12, ISLAND * 0.82, 1.4, 96), mat(0xc0906d, { roughness: 1 }), 0, -1.3, 0);
+    soil.castShadow = false;
+    var rock = mesh(new THREE.ConeGeometry(ISLAND * 0.82, 6, 11, 2), mat(0xa77c63, { roughness: 1, flatShading: true }), 0, -5, 0);
+    rock.rotation.x = Math.PI; rock.castShadow = false;
+    // a few hanging rocks under the island
+    [[-6, -3.4, 4, 1.3], [5, -3.8, -5, 1.1], [7.5, -2.6, 3.5, 0.8]].forEach(function (r) {
+      var m = mesh(new THREE.DodecahedronGeometry(r[3], 0), mat(0xb88b6e, { roughness: 1, flatShading: true }), r[0], r[1], r[2]);
+      m.rotation.set(rnd(), rnd(), rnd()); m.castShadow = false;
+    });
+
+    // white-washed deck for the party table
+    var pc = canvas(512, 512), pg = pc.getContext('2d');
+    for (var y = 0, row = 0; y < 512; y += 28, row++) {
+      pg.fillStyle = row % 2 ? '#f3e4d8' : '#f8ede4'; pg.fillRect(0, y, 512, 28);
+      pg.fillStyle = '#e0cbbb'; pg.fillRect(0, y, 512, 2);
+      var jx = rnd() * 512; pg.fillRect(jx, y, 2, 28); pg.fillRect((jx + 256) % 512, y, 2, 28);
+    }
+    for (var q = 0; q < 260; q++) {
+      pg.strokeStyle = 'rgba(196,166,146,0.18)'; pg.lineWidth = 1;
+      var gx = rnd() * 512, gy = rnd() * 512;
+      pg.beginPath(); pg.moveTo(gx, gy); pg.lineTo(gx + R(20, 70), gy + R(-1, 1)); pg.stroke();
+    }
+    var deckTop = new THREE.MeshStandardMaterial({ map: canvasTex(pc), roughness: 0.8 });
+    var deckSide = mat(0xe6d2c4, { roughness: 0.85 });
+    var deck = new THREE.Mesh(new THREE.CylinderGeometry(DECK_R, DECK_R, DECK, 72), [deckSide, deckTop, deckSide]);
+    deck.position.y = DECK / 2; deck.receiveShadow = true; scene.add(deck);
+    var trim = mesh(new THREE.TorusGeometry(DECK_R, 0.045, 6, 120), mat(0xffffff, { roughness: 0.5 }), 0, DECK, 0);
+    trim.rotation.x = Math.PI / 2;
+
+    // stepping-stone path from the front edge
+    for (var s = 0; s < 6; s++) {
+      var st = mesh(new THREE.CylinderGeometry(0.5, 0.56, 0.1, 9), mat(0xefe4df, { roughness: 0.9, flatShading: true }), R(-0.25, 0.25), 0.03, 5.4 + s * 1.3);
+      st.rotation.y = rnd() * TAU; st.castShadow = false;
+      STONES.push({ x: st.position.x, z: st.position.z });
+    }
+  })();
+
+  // ---------------------------------------------------------------- party table
+  var tableTop = DECK + 1.5;
+  var clickables = [];
+  (function table() {
+    var c = canvas(256, 256), g = c.getContext('2d');
+    g.fillStyle = '#f7b6cd'; g.fillRect(0, 0, 256, 256);
+    g.fillStyle = '#ffffff';
+    for (var y = 0; y < 4; y++) for (var x = 0; x < 4; x++) {
+      g.beginPath(); g.arc(x * 64 + (y % 2 ? 32 : 0) + 16, y * 64 + 32, 9, 0, TAU); g.fill();
+    }
+    var clothMat = new THREE.MeshStandardMaterial({ map: canvasTex(c, 22, 2), roughness: 0.85, side: THREE.DoubleSide });
+    mesh(new THREE.CylinderGeometry(2.55, 2.92, 1.5, 72, 1, true), clothMat, 0, DECK + 0.75, 0);
+    mesh(new THREE.CylinderGeometry(2.56, 2.56, 0.05, 72), mat(0xfff5f8, { roughness: 0.8 }), 0, tableTop, 0);
+    var ruffle = mesh(new THREE.TorusGeometry(2.57, 0.07, 8, 120), mat(0xffffff, { roughness: 0.6 }), 0, tableTop - 0.02, 0);
+    ruffle.rotation.x = Math.PI / 2;
+    var hem = mesh(new THREE.TorusGeometry(2.92, 0.05, 8, 120), mat(0xffffff, { roughness: 0.6 }), 0, DECK + 0.05, 0);
+    hem.rotation.x = Math.PI / 2;
+    // flower garland around the table edge
+    for (var i = 0; i < 16; i++) {
+      var a = i / 16 * TAU, rr = 2.64;
+      var hex = [0xf06a9b, 0xfff4f6, 0xf9a8c6, 0xffc1a6][i % 4];
+      roseHead(mul(M(Math.sin(a) * rr, tableTop - 0.2, Math.cos(a) * rr, 0, a, 0), M(0, 0, 0, Math.PI / 2 - 0.15, 0, 0, 0.75)), C(hex));
+      put('leaf', mul(M(Math.sin(a + 0.2) * 2.62, tableTop - 0.2, Math.cos(a + 0.2) * 2.62, 0, a, 0), M(0, 0, 0, 1.2, 0, 1.4, 0.9)), leafC());
+      put('leaf', mul(M(Math.sin(a - 0.2) * 2.62, tableTop - 0.2, Math.cos(a - 0.2) * 2.62, 0, a, 0), M(0, 0, 0, 1.2, 0, -1.4, 0.9)), leafC());
+      put('baby', M(Math.sin(a + 0.1) * 2.7, tableTop - 0.32, Math.cos(a + 0.1) * 2.7, 0, 0, 0, 1.3), C(0xffffff));
+    }
+  })();
+
+  // ---------------------------------------------------------------- cake
+  var cakeBase = tableTop + 0.025;
+  var goldMat = new THREE.MeshStandardMaterial({ color: C(0xead2a8), metalness: 0.75, roughness: 0.28, envMap: envTex, envMapIntensity: 1 });
+  mesh(new THREE.CylinderGeometry(0.2, 0.42, 0.3, 32), goldMat, 0, cakeBase + 0.15, 0);
+  mesh(new THREE.CylinderGeometry(1.36, 1.3, 0.06, 72), goldMat, 0, cakeBase + 0.33, 0);
+  var tiers = [
+    { r: 1.05, h: 0.72, c: 0xf9c6d8, trim: 0xfffafc, bead: 0xf7a8c4 },
+    { r: 0.78, h: 0.62, c: 0xe3d0f6, trim: 0xf7a8c4, bead: 0xffffff },
+    { r: 0.52, h: 0.52, c: 0xfff3f7, trim: 0xf7a8c4, bead: 0xe3d0f6 }
+  ];
+  var ty = cakeBase + 0.36, tierY = [];
+  tiers.forEach(function (t) {
+    tierY.push(ty);
+    var body = mesh(new THREE.CylinderGeometry(t.r, t.r, t.h, 72), mat(t.c, { roughness: 0.55 }), 0, ty + t.h / 2, 0);
+    body.userData.cake = true; clickables.push(body);
+    var ring = mesh(new THREE.TorusGeometry(t.r - 0.01, 0.05, 10, 96), mat(t.trim, { roughness: 0.45 }), 0, ty + t.h, 0);
+    ring.rotation.x = Math.PI / 2; ring.userData.cake = true; clickables.push(ring);
+    var nd = Math.round(t.r * 26);
+    for (var i = 0; i < nd; i++) {
+      var a = i / nd * TAU + R(-0.04, 0.04), len = R(0.07, 0.24);
+      put('drip', M(Math.sin(a) * (t.r + 0.004), ty + t.h - len / 2, Math.cos(a) * (t.r + 0.004), 0, 0, 0, 0.05, len / 2 + 0.02, 0.05), C(t.trim));
+    }
+    var nb = Math.round(t.r * TAU / 0.12);
+    for (var j = 0; j < nb; j++) {
+      var b = j / nb * TAU;
+      put('bead', M(Math.sin(b) * (t.r + 0.015), ty + 0.045, Math.cos(b) * (t.r + 0.015), 0, 0, 0, 0.05), C(t.bead));
+    }
+    ty += t.h;
+  });
+  var cakeTop = ty;
+
+  // sugar roses on the ledges
+  [{ r: 0.915, y: tierY[1], n: 8, s: 0.5 }, { r: 0.655, y: tierY[2], n: 7, s: 0.4 }].forEach(function (L, li) {
+    for (var i = 0; i < L.n; i++) {
+      var a = i / L.n * TAU + li * 0.3;
+      var hex = [0xf06a9b, 0xfff4f6, 0xffc1a6][i % 3];
+      roseHead(M(Math.sin(a) * L.r, L.y + 0.005, Math.cos(a) * L.r, R(-0.2, 0.2), R(0, TAU), R(-0.2, 0.2), L.s), C(hex));
+      put('leaf', M(Math.sin(a + 0.35) * L.r, L.y, Math.cos(a + 0.35) * L.r, 0, a, 1.35, L.s * 0.9), leafC());
+    }
+  });
+  // a cascade of roses down the front-right of the cake
+  [[2, 0.35, 0.62, 0.42], [2, 0.62, 0.25, 0.34], [1, 0.72, 0.72, 0.46], [1, 0.98, 0.36, 0.52], [1, 0.62, 0.18, 0.34],
+   [0, 1.1, 0.78, 0.5], [0, 1.36, 0.42, 0.6], [0, 1.04, 0.22, 0.4], [0, 1.62, 0.16, 0.38]].forEach(function (d, i) {
+    var t = tiers[d[0]], a = d[1], rr = t.r + 0.03;
+    var x = Math.sin(a) * rr, y = tierY[d[0]] + t.h * d[2], z = Math.cos(a) * rr;
+    var hex = [0xe2508a, 0xfff4f6, 0xf9a8c6, 0xffc1a6][i % 4];
+    roseHead(mul(M(x, y, z, 0, a, 0), M(0, 0, 0, Math.PI / 2 + R(-0.2, 0.2), 0, R(-0.3, 0.3), d[3])), C(hex));
+    put('leaf', mul(M(x, y, z, 0, a, 0), M(0, 0, 0.02, 1.4, 0, R(1.6, 2.4), d[3] * 1.2)), leafC());
+    put('baby', M(Math.sin(a + 0.12) * (rr + 0.04), y - 0.08, Math.cos(a + 0.12) * (rr + 0.04)), C(0xffffff));
+  });
+  roseHead(M(0, cakeTop + 0.005, 0, 0, 0, 0, 0.85), C(0xe2508a));
+
+  // candles
+  var flames = [];
+  var glowTex = (function () {
+    var c = canvas(64, 64), g = c.getContext('2d');
+    var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,226,160,1)'); gr.addColorStop(0.35, 'rgba(255,190,110,0.45)'); gr.addColorStop(1, 'rgba(255,170,90,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    return canvasTex(c);
+  })();
+  var flameGeo = new THREE.SphereGeometry(0.042, 14, 10).scale(1, 2.1, 1).translate(0, 0.075, 0);
+  var coreGeo = new THREE.SphereGeometry(0.022, 10, 8).scale(1, 1.8, 1).translate(0, 0.045, 0);
+  var flameMat = new THREE.MeshBasicMaterial({ color: C(0xffae42), transparent: true, opacity: 0.92 });
+  var coreMat = new THREE.MeshBasicMaterial({ color: C(0xfff4c9) });
+  var glowMat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  [0xf7a8c4, 0xc9a7ef, 0xffd166, 0xffc4a3, 0xa8e6cf].forEach(function (hex, i) {
+    var c = canvas(32, 128), g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 32, 128);
+    g.fillStyle = '#' + new THREE.Color(hex).getHexString();
+    for (var y = -64; y < 192; y += 26) { g.beginPath(); g.moveTo(0, y); g.lineTo(32, y - 20); g.lineTo(32, y - 8); g.lineTo(0, y + 12); g.closePath(); g.fill(); }
+    var a = i / 5 * TAU + 0.3, x = Math.sin(a) * 0.3, z = Math.cos(a) * 0.3;
+    var candle = mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.34, 14), new THREE.MeshStandardMaterial({ map: canvasTex(c), roughness: 0.5 }), x, cakeTop + 0.17, z);
+    candle.userData.cake = true; clickables.push(candle);
+    mesh(new THREE.CylinderGeometry(0.007, 0.007, 0.05, 5), mat(0x3a2a2a), x, cakeTop + 0.365, z);
+    var fg = new THREE.Group(); fg.position.set(x, cakeTop + 0.385, z); scene.add(fg);
+    fg.add(new THREE.Mesh(flameGeo, flameMat)); fg.add(new THREE.Mesh(coreGeo, coreMat));
+    var sp = new THREE.Sprite(glowMat); sp.position.set(x, cakeTop + 0.47, z); sp.scale.setScalar(0.4); scene.add(sp);
+    flames.push({ g: fg, sp: sp, ph: R(0, TAU), base: new V3(x, cakeTop + 0.385, z) });
+  });
+  var candleLight = new THREE.PointLight(C(0xffa95c), 0.9, 6, 2);
+  candleLight.position.set(0, cakeTop + 0.6, 0);
+  scene.add(candleLight);
+
+  // cupcakes around the cake
+  for (var cc = 0; cc < 7; cc++) {
+    var ca = cc / 7 * TAU + 0.22, cx = Math.sin(ca) * 1.95, cz = Math.cos(ca) * 1.95, by = tableTop + 0.025;
+    var fc = [0xf9a8c6, 0xe3d0f6, 0xfff4f6, 0xffc4a3][cc % 4];
+    put('wrapper', M(cx, by + 0.1, cz, 0, R(0, 1), 0), C([0xffffff, 0xf7b6cd, 0xc9a7ef, 0xa8e6cf][cc % 4]));
+    put('frost', M(cx, by + 0.23, cz, 0, 0, 0, 0.12, 0.11, 0.12), C(fc));
+    put('frost', M(cx, by + 0.31, cz, 0, 0, 0, 0.08, 0.09, 0.08), C(fc));
+    put('tip', M(cx, by + 0.4, cz, 0, 0, 0, 0.9), C(fc));
+    put('bead', M(cx, by + 0.48, cz, 0, 0, 0, 0.04), C(0xe2508a));
+  }
+
+  // ---------------------------------------------------------------- flower arch, banner, fairy lights
+  var ARCH_R = 4.4, ARCH_Z = -3.6;
+  var archMat = new THREE.MeshStandardMaterial({ color: C(0xffffff), metalness: 0.4, roughness: 0.35, envMap: envTex });
+  mesh(new THREE.TorusGeometry(ARCH_R, 0.07, 8, 120, Math.PI), archMat, 0, 0, ARCH_Z);
+  (function archFlowers() {
+    function spot(theta) {
+      var jr = R(-0.32, 0.32);
+      return [Math.cos(theta) * (ARCH_R + jr), Math.sin(theta) * (ARCH_R + jr), ARCH_Z + R(-0.22, 0.3)];
+    }
+    for (var i = 0; i < 120; i++) {
+      var th = i < 70 ? R(0.02, Math.PI - 0.02) : (rnd() < 0.5 ? R(0.02, 0.55) : R(Math.PI - 0.55, Math.PI - 0.02));
+      var p = spot(th); if (p[1] < 0.12) p[1] = R(0.12, 0.35);
+      var m = M(p[0], p[1], p[2], Math.PI / 2 + R(-0.5, 0.5), 0, R(-0.6, 0.6), R(1.5, 2.2));
+      if (rnd() < 0.62) roseHead(m, C(P([0xf06a9b, 0xf9a8c6, 0xfff4f6, 0xffc1a6, 0xd94f7d, 0xfff4f6])));
+      else put('pom', M(p[0], p[1], p[2], R(0, 3), R(0, 3), 0, R(1.1, 1.6)), C(P(POM_COLS)));
+    }
+    for (var j = 0; j < 110; j++) {
+      var q = spot(R(0, Math.PI));
+      put('leaf', M(q[0], Math.max(0.1, q[1]), q[2] - 0.08, R(0, TAU), R(0, TAU), R(0, TAU), R(1.4, 2)), leafC());
+    }
+    for (var b = 0; b < 140; b++) {
+      var s = spot(R(0, Math.PI));
+      put('baby', M(s[0], Math.max(0.1, s[1]), s[2] + 0.12, 0, 0, 0, R(1, 1.7)), C(0xffffff));
+    }
+  })();
+
+  // fairy lights along the arch
+  var BULBS = 38;
+  var bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(0.05, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }), BULBS);
+  var bulbBase = [], tmpC = new THREE.Color();
+  for (var bi = 0; bi < BULBS; bi++) {
+    var bt = 0.06 + bi / (BULBS - 1) * (Math.PI - 0.12), br = ARCH_R + (bi % 2 ? 0.46 : -0.44);
+    bulbs.setMatrixAt(bi, M(Math.cos(bt) * br, Math.sin(bt) * br, ARCH_Z + 0.32));
+    bulbBase.push(C(bi % 3 === 0 ? 0xffd9ec : 0xfff1c9));
+    bulbs.setColorAt(bi, bulbBase[bi]);
+  }
+  bulbs.frustumCulled = false;
+  scene.add(bulbs);
+
+  // banner
+  var BW = 1536, BH = 400;
+  var bannerCanvas = canvas(BW, BH), bannerBackCanvas = canvas(BW, BH);
+  var bannerTex = canvasTex(bannerCanvas), bannerBackTex = canvasTex(bannerBackCanvas);
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath();
+  }
+  function drawRibbon(g) {
+    g.clearRect(0, 0, BW, BH);
+    g.fillStyle = '#c94275';
+    g.beginPath(); g.moveTo(30, 150); g.lineTo(250, 150); g.lineTo(250, 370); g.lineTo(30, 370); g.lineTo(110, 260); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(BW - 30, 150); g.lineTo(BW - 250, 150); g.lineTo(BW - 250, 370); g.lineTo(BW - 30, 370); g.lineTo(BW - 110, 260); g.closePath(); g.fill();
+    g.fillStyle = '#9e2d5a';
+    g.beginPath(); g.moveTo(170, 310); g.lineTo(250, 370); g.lineTo(250, 310); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(BW - 170, 310); g.lineTo(BW - 250, 370); g.lineTo(BW - 250, 310); g.closePath(); g.fill();
+    var gr = g.createLinearGradient(0, 90, 0, 310);
+    gr.addColorStop(0, '#f78fb7'); gr.addColorStop(1, '#df4d88');
+    g.fillStyle = gr; roundRect(g, 170, 90, BW - 340, 220, 26); g.fill();
+    g.setLineDash([18, 12]); g.lineWidth = 5; g.strokeStyle = 'rgba(255,255,255,0.7)';
+    roundRect(g, 192, 112, BW - 384, 176, 16); g.stroke(); g.setLineDash([]);
+  }
+  function drawBanner(name) {
+    var g = bannerCanvas.getContext('2d');
+    drawRibbon(g);
+    var text = name ? 'Happy Birthday, ' + name + '!' : 'Happy Birthday!';
+    var size = 150, family = '"Dancing Script", "Brush Script MT", "Segoe Script", cursive';
+    g.font = '700 ' + size + 'px ' + family;
+    var maxW = BW - 340 - 140, w = g.measureText(text).width;
+    if (w > maxW) { size = Math.floor(size * maxW / w); g.font = '700 ' + size + 'px ' + family; }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(110,20,60,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 4;
+    g.fillStyle = '#ffffff'; g.fillText(text, BW / 2, 206);
+    g.shadowColor = 'transparent';
+    bannerTex.needsUpdate = true;
+  }
+  drawRibbon(bannerBackCanvas.getContext('2d')); bannerBackTex.needsUpdate = true;
+  (function bannerMesh() {
+    var geo = new THREE.PlaneGeometry(6.4, 6.4 * BH / BW, 48, 1);
+    var bp = geo.attributes.position;
+    for (var i = 0; i < bp.count; i++) { var x = bp.getX(i); bp.setZ(i, x * x / 18); }
+    geo.computeVertexNormals();
+    var front = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: bannerTex, transparent: true, alphaTest: 0.05, roughness: 0.7, side: THREE.FrontSide }));
+    var back = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: bannerBackTex, transparent: true, alphaTest: 0.05, roughness: 0.7, side: THREE.BackSide }));
+    var g = new THREE.Group(); g.add(front, back); g.position.set(0, 4.85, ARCH_Z + 0.35); scene.add(g);
+  })();
+
+  // ---------------------------------------------------------------- presents
+  function dotsTex(bg, fg) {
+    var c = canvas(128, 128), g = c.getContext('2d');
+    g.fillStyle = bg; g.fillRect(0, 0, 128, 128); g.fillStyle = fg;
+    [[32, 32], [96, 32], [0, 96], [64, 96], [128, 96]].forEach(function (p) { g.beginPath(); g.arc(p[0], p[1], 11, 0, TAU); g.fill(); });
+    return canvasTex(c, 2, 2);
+  }
+  function stripesTex(bg, fg) {
+    var c = canvas(128, 128), g = c.getContext('2d');
+    g.fillStyle = bg; g.fillRect(0, 0, 128, 128); g.fillStyle = fg;
+    for (var x = 0; x < 128; x += 32) g.fillRect(x, 0, 14, 128);
+    return canvasTex(c, 2, 2);
+  }
+  function gift(o) {
+    var g = new THREE.Group(); g.position.set(o.x, o.y, o.z); g.rotation.y = o.ry || 0; scene.add(g);
+    var boxMat = o.tex ? new THREE.MeshStandardMaterial({ map: o.tex, roughness: 0.6 }) : mat(o.box, { roughness: 0.6 });
+    var lidH = Math.min(0.14, o.h * 0.22);
+    mesh(new THREE.BoxGeometry(o.w, o.h - lidH, o.d), boxMat, 0, (o.h - lidH) / 2, 0, g);
+    mesh(new THREE.BoxGeometry(o.w * 1.07, lidH, o.d * 1.07), boxMat, 0, o.h - lidH / 2, 0, g);
+    var rib = mat(o.rib, { roughness: 0.35 });
+    var bw = Math.min(o.w, o.d) * 0.16;
+    mesh(new THREE.BoxGeometry(bw, o.h + 0.01, o.d * 1.08), rib, 0, (o.h + 0.01) / 2, 0, g);
+    mesh(new THREE.BoxGeometry(o.w * 1.08, o.h + 0.01, bw), rib, 0, (o.h + 0.01) / 2, 0, g);
+    if (!o.noBow) {
+      var bs = Math.min(o.w, o.d) * 0.55, top = o.h;
+      var loopGeo = new THREE.TorusGeometry(0.2, 0.06, 8, 20);
+      var l1 = mesh(loopGeo, rib, -0.2 * bs, top + 0.14 * bs, 0, g); l1.scale.set(bs, bs * 0.75, bs); l1.rotation.z = 0.55;
+      var l2 = mesh(loopGeo, rib, 0.2 * bs, top + 0.14 * bs, 0, g); l2.scale.set(bs, bs * 0.75, bs); l2.rotation.z = -0.55;
+      mesh(new THREE.SphereGeometry(0.09 * bs, 10, 8), rib, 0, top + 0.05 * bs, 0, g);
+    }
+  }
+  var GIFTS = [
+    { x: -3.5, z: 1.5, y: DECK, w: 0.95, h: 0.8, d: 0.9, tex: dotsTex('#c9a7ef', '#ffffff'), rib: 0xffffff, ry: 0.45 },
+    { x: -2.75, z: 2.7, y: DECK, w: 0.6, h: 0.5, d: 0.6, box: 0xfde2ec, rib: 0xe2508a, ry: -0.3 },
+    { x: 3.35, z: 1.85, y: DECK, w: 1.0, h: 0.72, d: 0.85, tex: dotsTex('#f27aa5', '#fff3c4'), rib: 0xfff3c4, ry: -0.5, noBow: true },
+    { x: 3.35, z: 1.85, y: DECK + 0.73, w: 0.6, h: 0.48, d: 0.55, tex: stripesTex('#bfe8d6', '#ffffff'), rib: 0xe2508a, ry: -0.2 },
+    { x: 2.45, z: 3.35, y: DECK, w: 0.5, h: 0.42, d: 0.5, box: 0xffe08a, rib: 0xc9a7ef, ry: 0.8 },
+    { x: -5.6, z: -2.6, y: 0, w: 0.7, h: 0.55, d: 0.7, box: 0xffc4a3, rib: 0xffffff, ry: 0.3, noBow: true },
+    { x: 5.6, z: -2.6, y: 0, w: 0.7, h: 0.55, d: 0.7, box: 0xe3d0f6, rib: 0xe2508a, ry: -0.3, noBow: true }
+  ];
+  GIFTS.forEach(gift);
+
+  // ---------------------------------------------------------------- balloons
+  var latexGeo = (function () {
+    var g = new THREE.SphereGeometry(0.5, 28, 20), p = g.attributes.position;
+    for (var i = 0; i < p.count; i++) {
+      var y = p.getY(i);
+      if (y < 0) { var f = 1 - 0.28 * Math.pow(-y / 0.5, 2); p.setX(i, p.getX(i) * f); p.setZ(i, p.getZ(i) * f); }
+      p.setY(i, y * 1.2);
+    }
+    g.computeVertexNormals();
+    return g;
+  })();
+  var heartGeo = (function () {
+    var s = new THREE.Shape();
+    s.moveTo(0, -0.5);
+    s.bezierCurveTo(-0.1, -0.38, -0.55, -0.1, -0.55, 0.18);
+    s.bezierCurveTo(-0.55, 0.42, -0.35, 0.55, -0.2, 0.55);
+    s.bezierCurveTo(-0.08, 0.55, 0, 0.45, 0, 0.36);
+    s.bezierCurveTo(0, 0.45, 0.08, 0.55, 0.2, 0.55);
+    s.bezierCurveTo(0.35, 0.55, 0.55, 0.42, 0.55, 0.18);
+    s.bezierCurveTo(0.55, -0.1, 0.1, -0.38, 0, -0.5);
+    var g = new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.1, bevelSegments: 6, curveSegments: 28 });
+    g.center();
+    return g;
+  })();
+  var knotGeo = new THREE.ConeGeometry(0.06, 0.09, 8);
+  var stringMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+  var balloons = [];
+  function addBalloon(anchor, rest, hex, kind, foil) {
+    var material = new THREE.MeshStandardMaterial({
+      color: C(hex), envMap: envTex,
+      roughness: foil ? 0.22 : 0.2, metalness: foil ? 0.8 : 0.05, envMapIntensity: foil ? 1.2 : 0.7
+    });
+    var m = mesh(kind === 'heart' ? heartGeo : latexGeo, material, rest.x, rest.y, rest.z);
+    var knot = mesh(knotGeo, material, 0, -0.64, 0, m);
+    var N = 14, lg = new THREE.BufferGeometry();
+    lg.setAttribute('position', new THREE.BufferAttribute(new Float32Array((N + 1) * 3), 3));
+    var line = new THREE.Line(lg, stringMat); line.frustumCulled = false; scene.add(line);
+    var b = { mesh: m, knot: knot, line: line, N: N, anchor: anchor, rest: rest, hex: hex, kind: kind, ph: rnd() * TAU, state: 'idle', timer: 0, grow: 1 };
+    m.userData.balloon = b; clickables.push(m);
+    balloons.push(b);
+  }
+  function cluster(ax, az, cols) {
+    var anchor = new V3(ax, 0.6, az);
+    cols.forEach(function (c, j) {
+      var a = j * 2.4 + 0.5, rr = j === 0 ? 0 : 0.62;
+      addBalloon(anchor, new V3(ax + Math.cos(a) * rr, 4.0 + j * 0.45, az + Math.sin(a) * rr), c[0], 'round', c[1]);
+    });
+  }
+  cluster(-5.6, -2.6, [[0xf7a8c4], [0xffffff], [0xc9a7ef], [0xe6c36a, true], [0xee6a9a]]);
+  cluster(5.6, -2.6, [[0xc9a7ef], [0xffc4a3], [0xf7a8c4], [0xfff7fb], [0xe6c36a, true]]);
+  addBalloon(new V3(-3.5, DECK + 0.9, 1.5), new V3(-4.15, 3.5, 2.1), 0xee5e95, 'heart', true);
+  addBalloon(new V3(3.35, DECK + 1.3, 1.85), new V3(4.15, 3.9, 2.4), 0xe6c36a, 'heart', true);
+
+  // ---------------------------------------------------------------- garden: trees, bushes, flower beds, grass
+  var trees = [{ x: -8.2, z: -6.2, s: 1.05 }, { x: 8.6, z: -5.4, s: 1 }, { x: -9.4, z: 5.2, s: 0.95 }];
+  var bushes = [{ x: 10.3, z: 1.4, r: 1.1 }, { x: -10.7, z: -0.8, r: 1.2 }, { x: 6.9, z: 8.3, r: 0.95 }, { x: -6.2, z: 9.4, r: 1.0 }, { x: 2.8, z: -9.8, r: 1.0 }, { x: -3.2, z: -10.2, r: 1.1 }];
+  trees.forEach(function (t) {
+    var g = new THREE.Group(); g.position.set(t.x, 0, t.z); g.scale.setScalar(t.s); g.rotation.y = rnd() * TAU; scene.add(g);
+    var bark = mat(0x8b5e4a, { roughness: 0.9, flatShading: true });
+    mesh(new THREE.CylinderGeometry(0.2, 0.34, 3, 7), bark, 0, 1.5, 0, g);
+    var b1 = mesh(new THREE.CylinderGeometry(0.08, 0.14, 1.6, 6), bark, 0.45, 3.0, 0, g); b1.rotation.z = -0.7;
+    var b2 = mesh(new THREE.CylinderGeometry(0.08, 0.14, 1.5, 6), bark, -0.4, 3.1, 0.2, g); b2.rotation.set(0.3, 0, 0.6);
+    var blobs = [[0, 4.3, 0, 1.6], [1.1, 3.9, 0.4, 1.15], [-1.1, 4.0, -0.3, 1.2], [0.3, 4.9, -0.6, 1.1], [-0.4, 4.6, 0.9, 1.05], [0.8, 4.4, -1.0, 1.0]];
+    var pinks = [0xf9c1d6, 0xf4a6c4, 0xfcd7e5, 0xf7b3cc];
+    blobs.forEach(function (bl, i) {
+      var m = mesh(new THREE.IcosahedronGeometry(1, 1), mat(pinks[i % 4], { roughness: 0.85, flatShading: true }), bl[0], bl[1], bl[2], g);
+      m.scale.setScalar(bl[3]);
+    });
+    g.updateMatrixWorld(true);
+    for (var k3 = 0; k3 < 70; k3++) {
+      var bl = P(blobs), dir = new V3(R(-1, 1), R(-0.3, 1), R(-1, 1)).normalize();
+      var p = new V3(bl[0], bl[1], bl[2]).addScaledVector(dir, bl[3] * 0.97);
+      g.localToWorld(p);
+      put('blossom', M(p.x, p.y, p.z, R(0, 3), R(0, 3), 0, R(0.8, 1.3)), C(P([0xffffff, 0xfff0f6, 0xe2508a, 0xffe1ee])));
+    }
+  });
+  bushes.forEach(function (b) {
+    var m = mesh(new THREE.IcosahedronGeometry(1, 1), mat(P([0x6fae62, 0x63a35a, 0x7bb86c]), { roughness: 0.9, flatShading: true }), b.x, b.r * 0.62, b.z);
+    m.scale.set(b.r, b.r * 0.82, b.r);
+    var col = P([0xf7b6d2, 0xfff5fa, 0xc7a6ec, 0xffc1a6, 0xf06a9b]);
+    for (var i = 0; i < 18; i++) {
+      var d = new V3(R(-1, 1), R(0.05, 1), R(-1, 1)).normalize();
+      put('pom', M(b.x + d.x * b.r, b.r * 0.62 + d.y * b.r * 0.82, b.z + d.z * b.r, R(0, 3), R(0, 3), 0, R(0.45, 0.62)), C(col));
+    }
+    for (var j = 0; j < 14; j++) {
+      var e = new V3(R(-1, 1), R(0, 1), R(-1, 1)).normalize();
+      put('baby', M(b.x + e.x * b.r * 1.01, b.r * 0.62 + e.y * b.r * 0.83, b.z + e.z * b.r * 1.01), C(0xffffff));
+    }
+  });
+
+  var avoid = [{ x: -5.6, z: -2.6, r: 1.0 }, { x: 5.6, z: -2.6, r: 1.0 }];
+  trees.forEach(function (t) { avoid.push({ x: t.x, z: t.z, r: 0.7 }); });
+  bushes.forEach(function (b) { avoid.push({ x: b.x, z: b.z, r: b.r + 0.25 }); });
+
+  // a flower-framed sign with the birthday wish, beside the garden path
+  var WISH = { x: -3.6, z: 10.0, yaw: 0.33 };
+  var WISH_TEXT = 'May the days ahead be better in every way, and may you find your goals in life.';
+  var wishCanvas = canvas(1024, 608), wishTex = canvasTex(wishCanvas);
+  function wishPoint(lx) { return { x: WISH.x + lx * Math.cos(WISH.yaw), z: WISH.z - lx * Math.sin(WISH.yaw) }; }
+  function wrapLines(g, text, maxW) {
+    var words = text.split(' '), lines = [], line = '';
+    words.forEach(function (w) {
+      var test = line ? line + ' ' + w : w;
+      if (line && g.measureText(test).width > maxW) { lines.push(line); line = w; } else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+  function drawHeart(g, x, y, s) {
+    g.beginPath(); g.moveTo(x, y + s * 0.9);
+    g.bezierCurveTo(x - s * 1.6, y - s * 0.2, x - s * 0.7, y - s * 1.4, x, y - s * 0.5);
+    g.bezierCurveTo(x + s * 0.7, y - s * 1.4, x + s * 1.6, y - s * 0.2, x, y + s * 0.9);
+    g.fill();
+  }
+  function drawWishSign(name) {
+    var g = wishCanvas.getContext('2d'), W = 1024, H = 608;
+    g.fillStyle = '#fff7fa'; g.fillRect(0, 0, W, H);
+    g.lineWidth = 18; g.strokeStyle = '#f27aa5'; roundRect(g, 18, 18, W - 36, H - 36, 40); g.stroke();
+    g.setLineDash([16, 12]); g.lineWidth = 5; g.strokeStyle = '#c9a7ef'; roundRect(g, 48, 48, W - 96, H - 96, 26); g.stroke(); g.setLineDash([]);
+    var title = name ? 'Happy Birthday, ' + name + '!' : 'Happy Birthday!';
+    var fam = '"Dancing Script", "Brush Script MT", "Segoe Script", cursive', size = 104;
+    g.font = '700 ' + size + 'px ' + fam;
+    var tw = g.measureText(title).width;
+    if (tw > W - 170) { size = Math.floor(size * (W - 170) / tw); g.font = '700 ' + size + 'px ' + fam; }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#b3346a'; g.fillText(title, W / 2, 148);
+    g.font = '800 48px "Nunito", "Segoe UI", system-ui, sans-serif';
+    var lines = wrapLines(g, WISH_TEXT, W - 210), y0 = 335 - (lines.length - 1) * 32;
+    g.fillStyle = '#4a1f3d';
+    lines.forEach(function (ln, i) { g.fillText(ln, W / 2, y0 + i * 64); });
+    g.fillStyle = '#f27aa5';
+    for (var i = 0; i < 5; i++) drawHeart(g, W / 2 + (i - 2) * 64, 500, i === 2 ? 18 : 12);
+    wishTex.needsUpdate = true;
+  }
+  (function wishSign() {
+    var g = new THREE.Group(); g.position.set(WISH.x, 0, WISH.z); g.rotation.y = WISH.yaw; scene.add(g);
+    var face = new THREE.MeshStandardMaterial({ map: wishTex, roughness: 0.8 });
+    var edge = mat(0xf27aa5, { roughness: 0.6 });
+    var board = mesh(new THREE.BoxGeometry(3.2, 1.9, 0.08), [edge, edge, edge, edge, face, face], 0, 1.5, 0, g);
+    board.userData.spot = 'wish'; clickables.push(board);
+    var wood = mat(0xf3e6dc, { roughness: 0.8 });
+    [-1.25, 1.25].forEach(function (x) { mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.2, 8), wood, x, 0.6, -0.03, g); });
+    g.updateMatrixWorld(true);
+    var p = new V3(), spots = [];
+    for (var i = 0; i <= 12; i++) spots.push([-1.6 + i * 3.2 / 12, 2.47]);
+    [0.75, 1.25, 1.75].forEach(function (y) { spots.push([-1.62, y]); spots.push([1.62, y]); });
+    spots.forEach(function (s, j) {
+      p.set(s[0], s[1], 0.07); g.localToWorld(p);
+      var base = M(p.x, p.y, p.z, 0, WISH.yaw, 0);
+      roseHead(mul(base, M(0, 0, 0, Math.PI / 2 - 0.25, 0, R(-0.5, 0.5), R(0.85, 1.15))), C([0xf06a9b, 0xfff4f6, 0xf9a8c6, 0xffc1a6][j % 4]));
+      put('leaf', mul(base, M(0, 0, -0.02, R(0, TAU), R(0, TAU), R(0, TAU), R(0.9, 1.3))), leafC());
+    });
+  })();
+  [-1.3, 0, 1.3].forEach(function (lx) { var q = wishPoint(lx); avoid.push({ x: q.x, z: q.z, r: 0.9 }); });
+  function blocked(x, z) {
+    var r = Math.hypot(x, z);
+    if (r < DECK_R + 0.45 || r > ISLAND - 0.6) return true;
+    if (Math.abs(x) < 1.6 && z > 4.3) return true;
+    if (Math.abs(x) < 5.4 && z < -2.7 && z > -4.6) return true;
+    for (var i = 0; i < avoid.length; i++) if (Math.hypot(x - avoid[i].x, z - avoid[i].z) < avoid[i].r) return true;
+    return false;
+  }
+  (function beds() {
+    var TYPES = ['rose', 'rose', 'tulip', 'tulip', 'daisy', 'daisy', 'pom'];
+    var made = 0, tries = 0;
+    while (made < 60 && tries < 3000) {
+      tries++;
+      var a = R(0, TAU), r = Math.sqrt(R(5.3 * 5.3, 12.2 * 12.2));
+      var cx = Math.sin(a) * r, cz = Math.cos(a) * r;
+      if (blocked(cx, cz)) continue;
+      made++;
+      var type = P(TYPES);
+      var pal = type === 'rose' ? ROSE_COLS : type === 'tulip' ? TULIP_COLS : type === 'daisy' ? DAISY_COLS : POM_COLS;
+      var c1 = P(pal), c2 = P(pal), n = 5 + Math.floor(R(0, 5));
+      for (var k4 = 0; k4 < n; k4++) {
+        var fx = cx + R(-0.85, 0.85), fz = cz + R(-0.85, 0.85);
+        if (!blocked(fx, fz)) plant(type, fx, fz, rnd() < 0.7 ? c1 : c2);
+      }
+    }
+    // borders along the stepping-stone path
+    var i = 0;
+    for (var z = 5.0; z < 12.2; z += 0.55, i++) {
+      [-1, 1].forEach(function (side) {
+        var x = side * (1.85 + R(-0.15, 0.15));
+        if (Math.hypot(x, z) > ISLAND - 0.5) return;
+        if (Math.hypot(x - WISH.x, z - WISH.z) < 2.1) return;
+        if (i % 2) plant('daisy', x, z, side < 0 ? 0xffffff : 0xffd6e7);
+        else plant('tulip', x, z, side < 0 ? 0xf27aa5 : 0xc79ae8);
+      });
+    }
+    // grass tufts everywhere off the deck
+    for (var t = 0; t < 520; t++) {
+      var ta = R(0, TAU), tr = Math.sqrt(R(DECK_R * DECK_R + 1, 12.8 * 12.8));
+      var tx = Math.sin(ta) * tr, tz = Math.cos(ta) * tr;
+      if (Math.abs(tx) < 0.9 && tz > 4.8) continue;
+      for (var bl = 0; bl < 3; bl++) put('tuft', M(tx + R(-0.06, 0.06), 0, tz + R(-0.06, 0.06), R(-0.35, 0.35), R(0, TAU), R(-0.35, 0.35), R(0.7, 1.3)), leafC());
+    }
+  })();
+
+  // bunting from the arch to the cherry trees
+  var flags = [];
+  (function bunting() {
+    var flagShape = new THREE.Shape(); flagShape.moveTo(-0.17, 0); flagShape.lineTo(0.17, 0); flagShape.lineTo(0, -0.42); flagShape.closePath();
+    var flagGeo = new THREE.ShapeGeometry(flagShape);
+    var cols = [0xf27aa5, 0xfde2ec, 0xc9a7ef, 0xffffff, 0xffc4a3];
+    // strung high enough for the birthday girl to walk underneath
+    var ends = [[new V3(-2.52, 3.6, ARCH_Z), new V3(-8.0, 3.6, -6.0)], [new V3(2.52, 3.6, ARCH_Z), new V3(8.4, 3.55, -5.25)]];
+    ends.forEach(function (e) {
+      var A = e[0], B = e[1], sag = 0.5, pts = [];
+      function at(t) { return new V3().lerpVectors(A, B, t).add(new V3(0, -sag * 4 * t * (1 - t), 0)); }
+      for (var i = 0; i <= 24; i++) pts.push(at(i / 24));
+      var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), stringMat); scene.add(line);
+      var ry = Math.atan2(-(B.z - A.z), B.x - A.x), n = 10;
+      for (var f = 0; f < n; f++) {
+        var p = at((f + 0.75) / (n + 0.5));
+        var m = new THREE.Mesh(flagGeo, mat(cols[f % cols.length], { roughness: 0.8, side: THREE.DoubleSide }));
+        m.position.copy(p); m.rotation.y = ry; m.castShadow = true; scene.add(m);
+        flags.push({ m: m, ph: f * 0.7 });
+      }
+    });
+  })();
+
+  // clouds drifting around the island
+  var clouds = [];
+  (function makeClouds() {
+    var cm = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, emissive: C(0xfff0f6), emissiveIntensity: 0.4 });
+    var cg = new THREE.SphereGeometry(1, 18, 12);
+    for (var i = 0; i < 7; i++) {
+      var g = new THREE.Group();
+      for (var j = 0; j < 5; j++) {
+        var s = new THREE.Mesh(cg, cm);
+        s.position.set(R(-1.7, 1.7), R(-0.2, 0.45), R(-0.6, 0.6)); s.scale.setScalar(R(0.8, 1.45)); s.scale.y *= 0.8;
+        g.add(s);
+      }
+      g.scale.setScalar(R(1.2, 2.0)); scene.add(g);
+      clouds.push({ g: g, a: i / 7 * TAU + R(0, 0.5), r: R(22, 30), y: R(-5, 7), sp: R(0.012, 0.025) });
+    }
+  })();
+
+  buildParts();
+
+  // ---------------------------------------------------------------- butterflies
+  var butterflies = [0xffd166, 0xc9a7ef, 0xf7a8c4].map(function (hex, i) {
+    var g = new THREE.Group();
+    var wm = new THREE.MeshStandardMaterial({ color: C(hex), roughness: 0.6, side: THREE.DoubleSide, emissive: C(hex), emissiveIntensity: 0.2 });
+    var upper = new THREE.CircleGeometry(0.15, 14).scale(1, 0.8, 1).translate(0.13, 0.06, 0).rotateX(Math.PI / 2);
+    var lower = new THREE.CircleGeometry(0.1, 12).translate(0.09, -0.08, 0).rotateX(Math.PI / 2);
+    var Rw = new THREE.Group(); Rw.add(new THREE.Mesh(upper, wm), new THREE.Mesh(lower, wm));
+    var Lw = new THREE.Group(); Lw.add(new THREE.Mesh(upper, wm), new THREE.Mesh(lower, wm)); Lw.scale.x = -1;
+    var body = new THREE.Mesh(new THREE.SphereGeometry(1, 8, 6), mat(0x4a2a3a)); body.scale.set(0.022, 0.022, 0.13);
+    g.add(Rw, Lw, body); scene.add(g);
+    return { g: g, R: Rw, L: Lw, ph: i * 2.1, r: 6.5 + i * 1.2, y: 1.5 + i * 0.4, w: (i % 2 ? -1 : 1) * (0.22 + i * 0.04) };
+  });
+  function butterflyPos(b, t, out) {
+    var a = t * b.w + b.ph;
+    return out.set(Math.sin(a) * b.r + Math.sin(t * 2.3 + b.ph) * 0.6, b.y + Math.sin(t * 3.1 + b.ph) * 0.4, Math.cos(a) * b.r + Math.cos(t * 1.7 + b.ph) * 0.6);
+  }
+
+  // ---------------------------------------------------------------- the birthday girl, her spots, and how she walks
+  var GIRL_S = 1.2, WALK = 1.9, GIRL_R = 0.45;
+  var girl = (function makeGirl() {
+    var root = new THREE.Group(), body = new THREE.Group();
+    root.add(body); root.scale.setScalar(GIRL_S); scene.add(root);
+    var skin = mat(0xf2c6a0, { roughness: 0.6 });
+    var dressM = mat(0xf27aa5, { roughness: 0.6, side: THREE.DoubleSide });
+    var dressLight = mat(0xfcd3e2, { roughness: 0.65, side: THREE.DoubleSide });
+    var hairM = mat(0x4b2c22, { roughness: 0.55 });
+    var whiteM = mat(0xffffff, { roughness: 0.5 });
+    var pinkM = mat(0xe2508a, { roughness: 0.35 });
+
+    // petal skirt: a lathe whose hem is cut into eight petals
+    function skirtGeo(rScale, drop, phase) {
+      var pts = [[0.44, 0], [0.4, 0.08], [0.3, 0.24], [0.2, 0.39], [0.165, 0.44]].map(function (p) { return new THREE.Vector2(p[0] * rScale, p[1]); });
+      var g = new THREE.LatheGeometry(pts, 48), pos = g.attributes.position;
+      for (var i = 0; i < pos.count; i++) {
+        var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        var f = Math.pow(1 - y / 0.44, 2), petal = Math.abs(Math.cos((Math.atan2(z, x) + phase) * 4));
+        var kk = 1 + 0.07 * f * petal;
+        pos.setXYZ(i, x * kk, y - drop * f * petal, z * kk);
+      }
+      g.computeVertexNormals();
+      return g;
+    }
+    var skirt = new THREE.Group(); skirt.position.y = 0.54; body.add(skirt);
+    mesh(skirtGeo(0.97, 0.1, Math.PI / 8), dressLight, 0, -0.035, 0, skirt);
+    mesh(skirtGeo(1, 0.07, 0), dressM, 0, 0, 0, skirt);
+
+    // bodice, sash with a bow at the back, collar, neck
+    mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.33, 20), dressM, 0, 1.145, 0, body);
+    mesh(new THREE.TorusGeometry(0.168, 0.034, 8, 28), whiteM, 0, 0.99, 0, body).rotation.x = Math.PI / 2;
+    [-1, 1].forEach(function (s) {
+      var loop = mesh(new THREE.SphereGeometry(1, 10, 8), whiteM, 0.07 * s, 1.0, -0.185, body);
+      loop.scale.set(0.075, 0.05, 0.035); loop.rotation.z = 0.4 * s;
+    });
+    mesh(new THREE.SphereGeometry(0.03, 8, 6), whiteM, 0, 0.995, -0.19, body);
+    mesh(new THREE.TorusGeometry(0.1, 0.028, 8, 22), whiteM, 0, 1.3, 0, body).rotation.x = Math.PI / 2;
+    mesh(new THREE.CylinderGeometry(0.05, 0.056, 0.09, 12), skin, 0, 1.335, 0, body);
+
+    function arm(side) {
+      var g = new THREE.Group(); g.position.set(0.195 * side, 1.255, 0); g.rotation.z = 0.22 * side; body.add(g);
+      mesh(new THREE.SphereGeometry(0.088, 14, 10), dressM, 0, -0.03, 0, g).scale.set(1, 0.92, 1);
+      mesh(new THREE.TorusGeometry(0.07, 0.016, 6, 18), whiteM, 0, -0.095, 0, g).rotation.x = Math.PI / 2;
+      mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.34, 10), skin, 0, -0.24, 0, g);
+      mesh(new THREE.SphereGeometry(0.048, 10, 8), skin, 0, -0.42, 0, g);
+      return g;
+    }
+    function leg(side) {
+      var g = new THREE.Group(); g.position.set(0.088 * side, 0.56, 0); body.add(g);
+      mesh(new THREE.CylinderGeometry(0.058, 0.05, 0.4, 10), skin, 0, -0.2, 0, g);
+      mesh(new THREE.CylinderGeometry(0.054, 0.054, 0.1, 10), whiteM, 0, -0.42, 0, g);
+      mesh(new THREE.SphereGeometry(1, 14, 10), pinkM, 0, -0.5, 0.03, g).scale.set(0.072, 0.052, 0.11);
+      return g;
+    }
+    var armL = arm(1), armR = arm(-1), legL = leg(1), legR = leg(-1);
+
+    // head: face, eyes, rosy cheeks, smile, hair, pigtails and a flower crown
+    var head = new THREE.Group(); head.position.set(0, 1.37, 0); body.add(head);
+    var HC = 0.28;
+    mesh(new THREE.SphereGeometry(0.3, 32, 24), skin, 0, HC, 0, head).scale.set(1, 0.96, 0.96);
+    var eyeM = mat(0x2b1a22, { roughness: 0.3 }), cheekM = mat(0xff9fbf, { roughness: 0.8, transparent: true, opacity: 0.7 });
+    var eyes = [];
+    [-1, 1].forEach(function (s) {
+      var e = mesh(new THREE.SphereGeometry(0.042, 14, 10), eyeM, 0.105 * s, HC - 0.01, 0.262, head);
+      e.scale.set(1, 1.15, 0.6); e.castShadow = false;
+      var hl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), whiteM); hl.position.set(0.013, 0.016, 0.036); e.add(hl);
+      eyes.push(e);
+      var ch = mesh(new THREE.CircleGeometry(0.045, 18), cheekM, 0.165 * s, HC - 0.085, 0.232, head);
+      ch.rotation.y = 0.55 * s; ch.castShadow = false;
+    });
+    var smile = mesh(new THREE.TorusGeometry(0.05, 0.011, 6, 16, Math.PI), mat(0xb3346a, { roughness: 0.5 }), 0, HC - 0.105, 0.271, head);
+    smile.rotation.set(0.35, 0, Math.PI); smile.castShadow = false;
+    var cap = mesh(new THREE.SphereGeometry(0.318, 32, 20, 0, TAU, 0, Math.PI * 0.56), hairM, 0, HC, 0, head);
+    cap.rotation.x = -0.5; cap.scale.set(1, 0.97, 0.98);
+    var pigs = [-1, 1].map(function (s) {
+      var g = new THREE.Group(); g.position.set(0.29 * s, HC + 0.04, -0.07); head.add(g);
+      mesh(new THREE.SphereGeometry(0.045, 10, 8), pinkM, 0, 0, 0, g);
+      mesh(new THREE.SphereGeometry(0.13, 16, 12), hairM, 0.07 * s, -0.13, -0.02, g).scale.set(0.8, 1.3, 0.85);
+      return g;
+    });
+    var axis = new V3(0, Math.cos(0.5), -Math.sin(0.5)), uAx = new V3(1, 0, 0), vAx = new V3(0, Math.sin(0.5), Math.cos(0.5));
+    var ringC = new V3(0, HC, 0).addScaledVector(axis, 0.19);
+    mesh(new THREE.TorusGeometry(0.262, 0.016, 6, 40), mat(0x5f9e57, { roughness: 0.7 }), ringC.x, ringC.y, ringC.z, head).rotation.x = -Math.PI / 2 - 0.5;
+    var crownCols = [0xf06a9b, 0xffffff, 0xffd166, 0xf9a8c6, 0xc9a7ef];
+    for (var i = 0; i < 11; i++) {
+      var ph = i / 11 * TAU, front = Math.max(0, Math.sin(ph));
+      var p = ringC.clone().addScaledVector(uAx, Math.cos(ph) * 0.262).addScaledVector(vAx, Math.sin(ph) * 0.262);
+      mesh(new THREE.IcosahedronGeometry(0.046 + 0.024 * front, 1), mat(crownCols[i % 5], { roughness: 0.7, flatShading: true }), p.x, p.y, p.z, head);
+    }
+
+    root.traverse(function (o) { if (o.isMesh) { o.userData.girl = true; clickables.push(o); } });
+    return {
+      root: root, body: body, head: head, skirt: skirt, armL: armL, armR: armR, legL: legL, legR: legR, eyes: eyes, pigs: pigs,
+      pos: new V3(0.3, 0, 9.3), yaw: 0, yawGoal: 0, speed: 0, phase: 0, path: null, pi: 0, mode: 'idle', timer: 0, spot: null,
+      waveT: 0, wave: 0, leanT: 0, lean: 0, look: 0, lookGoal: 0, hopT: -1, blinkT: 2.5, blew: false
+    };
+  })();
+
+  function groundY(x, z) {
+    if (Math.hypot(x, z) < DECK_R) return DECK;
+    for (var i = 0; i < STONES.length; i++) if (Math.hypot(x - STONES[i].x, z - STONES[i].z) < 0.5) return 0.08;
+    return 0;
+  }
+  girl.pos.y = groundY(girl.pos.x, girl.pos.z);
+  girl.root.position.copy(girl.pos);
+
+  // every spot she can visit: where she stands, what she looks at, what she says, and how the camera frames it
+  var SPOTS = {
+    path: { chip: 'Garden path', label: 'the garden path', stand: [0.3, 9.3], feature: [0, 1.5, 0], say: 'Welcome to my party!', cam: [3.6, 3.4, 15.8], look: [0, 1.7, 7.4] },
+    wish: { chip: 'Birthday wish', label: 'the birthday wish', stand: [-0.6, 10.9], feature: [-3.6, 1.6, 10.0], say: 'A wish for me!', cam: [2.0, 3.0, 18.2], look: [-2.4, 1.5, 10.2], noPost: true },
+    presents: { chip: 'Presents', label: 'the presents', stand: [4.5, 3.9], feature: [2.9, 0.6, 2.6], say: 'Presents for me?', cam: [8.4, 3.6, 8.6], look: [3.4, 1.3, 2.9] },
+    cake: { chip: 'The cake', label: 'the birthday cake', stand: [0, 3.65], feature: [0, 3.2, 0], say: 'Make a wish!', cam: [3.4, 4.0, 10.0], look: [0, 2.3, 1.4], action: 'blow' },
+    balloons: { chip: 'Balloons', label: 'the balloons', stand: [-5.0, -0.5], feature: [-5.6, 4.8, -2.6], say: 'Tap a balloon!', cam: [-7.0, 2.6, 8.2], look: [-5.3, 2.5, -1.4] },
+    arch: { chip: 'Flower arch', label: 'the flower arch', stand: [-2.4, -3.85], feature: [-4.0, 2.6, -3.6], say: 'So many roses!', cam: [-8.0, 3.0, 1.2], look: [-2.3, 2.0, -3.6] },
+    secret: { chip: 'Secret garden', label: 'the secret garden', stand: [0, -8.8], feature: [-3.2, 0.9, -10.2], say: 'A secret garden!', cam: [3.5, 3.4, -15.5], look: [0, 1.8, -7.5] },
+    trees: { chip: 'Cherry trees', label: 'the cherry trees', stand: [7.0, -3.4], feature: [8.6, 4.2, -5.4], say: 'Pink petals everywhere!', cam: [12.4, 3.4, 2.6], look: [7.6, 2.6, -4.0] },
+    flowers: { chip: 'Flower beds', label: 'the flower beds', stand: [8.0, 0.4], feature: [9.6, 0.5, 1.2], say: 'Smell the flowers!', cam: [13.8, 3.8, 6.0], look: [8.6, 1.0, 0.8] }
+  };
+  var TOUR = ['path', 'presents', 'cake', 'balloons', 'arch', 'secret', 'trees', 'flowers', 'wish'];
+  Object.keys(SPOTS).forEach(function (k) {
+    var s = SPOTS[k];
+    s.key = k; s.camV = new V3().fromArray(s.cam); s.lookV = new V3().fromArray(s.look); s.featureV = new V3().fromArray(s.feature);
+  });
+  girl.spot = SPOTS.path;
+
+  // solid things she walks around
+  var RAW = [{ x: 0, z: 0, r: 2.92 }];
+  GIFTS.forEach(function (gd) { RAW.push({ x: gd.x, z: gd.z, r: Math.hypot(gd.w, gd.d) * 0.54 }); });
+  [-1, 1].forEach(function (s) { RAW.push({ x: 4.4 * s, z: ARCH_Z, r: 0.75 }); });
+  trees.forEach(function (t) { RAW.push({ x: t.x, z: t.z, r: 0.36 * t.s }); });
+  bushes.forEach(function (b) { RAW.push({ x: b.x, z: b.z, r: b.r - 0.1 }); });
+  [-1.3, 0, 1.3].forEach(function (lx) { var q = wishPoint(lx); RAW.push({ x: q.x, z: q.z, r: 0.3 }); });
+  function clearance(x, z) {
+    var c = 1e9;
+    for (var i = 0; i < RAW.length; i++) c = Math.min(c, Math.hypot(x - RAW[i].x, z - RAW[i].z) - RAW[i].r);
+    return c;
+  }
+
+  // a glowing ring and a signpost mark every spot
+  var spotRings = [], labelDraws = [];
+  var ringGeo = new THREE.RingGeometry(0.5, 0.64, 48).rotateX(-Math.PI / 2);
+  var postMat = mat(0xf3e6dc, { roughness: 0.8 }), boardEdge = mat(0xe2508a, { roughness: 0.5 });
+  Object.keys(SPOTS).forEach(function (k, i) {
+    var sp = SPOTS[k];
+    var ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: C(0xf27aa5), transparent: true, opacity: 0.45, depthWrite: false }));
+    ring.position.set(sp.stand[0], groundY(sp.stand[0], sp.stand[1]) + 0.02, sp.stand[1]);
+    ring.userData.spot = k; clickables.push(ring); scene.add(ring);
+    spotRings.push({ m: ring, key: k, ph: i * 0.9 });
+    if (sp.noPost) return;
+    var fx = sp.stand[0] - sp.cam[0], fz = sp.stand[1] - sp.cam[2], fl = Math.hypot(fx, fz) || 1;
+    fx /= fl; fz /= fl;
+    var sx = sp.stand[0] + fz * 1.05, sz = sp.stand[1] - fx * 1.05;
+    if (clearance(sx, sz) < 0.45 || Math.hypot(sx, sz) > ISLAND - 0.9) { sx = sp.stand[0] - fz * 1.05; sz = sp.stand[1] + fx * 1.05; }
+    var g = new THREE.Group();
+    g.position.set(sx, groundY(sx, sz), sz);
+    g.rotation.y = Math.atan2(sp.cam[0] - sx, sp.cam[2] - sz);
+    scene.add(g);
+    var lc = canvas(512, 188), tex = canvasTex(lc);
+    var draw = function () {
+      var x = lc.getContext('2d'), size = 70, fam = '"Nunito", "Segoe UI", system-ui, sans-serif';
+      x.fillStyle = '#e2508a'; x.fillRect(0, 0, 512, 188);
+      x.setLineDash([12, 9]); x.lineWidth = 4; x.strokeStyle = 'rgba(255,255,255,0.75)';
+      roundRect(x, 16, 16, 480, 156, 24); x.stroke(); x.setLineDash([]);
+      x.font = '800 ' + size + 'px ' + fam;
+      var w = x.measureText(sp.chip).width;
+      if (w > 430) { size = Math.floor(size * 430 / w); x.font = '800 ' + size + 'px ' + fam; }
+      x.fillStyle = '#ffffff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(sp.chip, 256, 98);
+      tex.needsUpdate = true;
+    };
+    draw(); labelDraws.push(draw);
+    var face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 });
+    var post = mesh(new THREE.CylinderGeometry(0.045, 0.055, 1.55, 8), postMat, 0, 0.775, 0, g);
+    var board = mesh(new THREE.BoxGeometry(1.15, 0.42, 0.05), [boardEdge, boardEdge, boardEdge, boardEdge, face, face], 0, 1.42, 0.035, g);
+    var bloom = mesh(new THREE.IcosahedronGeometry(0.09, 1), mat(0xfff4f6, { roughness: 0.7, flatShading: true }), 0, 1.68, 0, g);
+    [post, board, bloom].forEach(function (m) { m.userData.spot = k; clickables.push(m); });
+    sp.post = { x: sx, z: sz };
+  });
+
+  // walkable grid (0.25 units a cell) for finding paths around everything solid
+  var OBST = RAW.map(function (o) { return { x: o.x, z: o.z, r: o.r + GIRL_R }; });
+  Object.keys(SPOTS).forEach(function (k) { var p = SPOTS[k].post; if (p) OBST.push({ x: p.x, z: p.z, r: 0.12 + GIRL_R }); });
+  var NC = 0.25, NN = 104, NH = 13, navGrid = new Uint8Array(NN * NN);
+  for (var ni = 0; ni < NN * NN; ni++) {
+    var gx0 = -NH + ((ni % NN) + 0.5) * NC, gz0 = -NH + (Math.floor(ni / NN) + 0.5) * NC;
+    var bc = Math.hypot(gx0, gz0) > ISLAND - 0.8;
+    for (var oi = 0; !bc && oi < OBST.length; oi++) if (Math.hypot(gx0 - OBST[oi].x, gz0 - OBST[oi].z) < OBST[oi].r) bc = true;
+    navGrid[ni] = bc ? 1 : 0;
+  }
+  function cellX(i) { return -NH + ((i % NN) + 0.5) * NC; }
+  function cellZ(i) { return -NH + (Math.floor(i / NN) + 0.5) * NC; }
+  function cellAt(x, z) {
+    var cx = Math.min(NN - 1, Math.max(0, Math.floor((x + NH) / NC))), cz = Math.min(NN - 1, Math.max(0, Math.floor((z + NH) / NC)));
+    return cz * NN + cx;
+  }
+  function isFree(x, z) {
+    if (!(x > -NH && z > -NH && x < NH && z < NH)) return false;
+    return !navGrid[cellAt(x, z)];
+  }
+  function nearestFreeCell(i) {
+    if (!navGrid[i]) return i;
+    var cx = i % NN, cz = Math.floor(i / NN);
+    for (var r = 1; r < 40; r++) {
+      var best = -1, bd = 1e9;
+      for (var dz = -r; dz <= r; dz++) for (var dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+        var x = cx + dx, z = cz + dz;
+        if (x < 0 || z < 0 || x >= NN || z >= NN) continue;
+        var j = z * NN + x;
+        if (!navGrid[j] && dx * dx + dz * dz < bd) { bd = dx * dx + dz * dz; best = j; }
+      }
+      if (best >= 0) return best;
+    }
+    return -1;
+  }
+  function Heap() { this.ids = []; this.pr = []; }
+  Heap.prototype.push = function (id, p) {
+    var a = this.ids, b = this.pr, i = a.length;
+    a.push(id); b.push(p);
+    while (i > 0) {
+      var j = (i - 1) >> 1;
+      if (b[j] <= b[i]) break;
+      var ti = a[i]; a[i] = a[j]; a[j] = ti;
+      var tp = b[i]; b[i] = b[j]; b[j] = tp;
+      i = j;
+    }
+  };
+  Heap.prototype.pop = function () {
+    var a = this.ids, b = this.pr, top = a[0], li = a.pop(), lp = b.pop();
+    if (a.length) {
+      a[0] = li; b[0] = lp;
+      var i = 0, n = a.length;
+      for (;;) {
+        var l = 2 * i + 1, r = l + 1, m = i;
+        if (l < n && b[l] < b[m]) m = l;
+        if (r < n && b[r] < b[m]) m = r;
+        if (m === i) break;
+        var ti = a[i]; a[i] = a[m]; a[m] = ti;
+        var tp = b[i]; b[i] = b[m]; b[m] = tp;
+        i = m;
+      }
+    }
+    return top;
+  };
+  function lineFree(a, b) {
+    var n = Math.ceil(a.distanceTo(b) / 0.1);
+    for (var k = 1; k < n; k++) {
+      var t = k / n;
+      if (!isFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) return false;
+    }
+    return true;
+  }
+  // A* over the grid, then straightened wherever the way is clear; points are Vector2(x, z)
+  function findPath(sx, sz, tx, tz) {
+    var s = nearestFreeCell(cellAt(sx, sz)), e = nearestFreeCell(cellAt(tx, tz));
+    if (s < 0 || e < 0) return null;
+    var exact = isFree(tx, tz), ex = exact ? tx : cellX(e), ez = exact ? tz : cellZ(e);
+    var N = NN * NN, cost = new Float32Array(N), came = new Int32Array(N), closed = new Uint8Array(N);
+    cost.fill(1e9); came.fill(-1);
+    var ecx = e % NN, ecz = Math.floor(e / NN);
+    var h = function (i) { var dx = Math.abs(i % NN - ecx), dz = Math.abs(Math.floor(i / NN) - ecz); return dx + dz - 0.5858 * Math.min(dx, dz); };
+    var heap = new Heap(), found = false;
+    cost[s] = 0; heap.push(s, h(s));
+    while (heap.ids.length) {
+      var cur = heap.pop();
+      if (cur === e) { found = true; break; }
+      if (closed[cur]) continue;
+      closed[cur] = 1;
+      var cx = cur % NN, cz = Math.floor(cur / NN);
+      for (var dz = -1; dz <= 1; dz++) for (var dx = -1; dx <= 1; dx++) {
+        if (!dx && !dz) continue;
+        var nx = cx + dx, nz = cz + dz;
+        if (nx < 0 || nz < 0 || nx >= NN || nz >= NN) continue;
+        var nb = nz * NN + nx;
+        if (navGrid[nb] || closed[nb]) continue;
+        if (dx && dz && (navGrid[cz * NN + nx] || navGrid[nz * NN + cx])) continue;
+        var nc = cost[cur] + (dx && dz ? 1.4142 : 1);
+        if (nc < cost[nb]) { cost[nb] = nc; came[nb] = cur; heap.push(nb, nc + h(nb)); }
+      }
+    }
+    if (!found) return null;
+    var cells = [];
+    for (var c = e; c !== -1; c = came[c]) cells.push(c);
+    cells.reverse();
+    var pts = [new THREE.Vector2(sx, sz)];
+    for (var q = 1; q < cells.length - 1; q++) pts.push(new THREE.Vector2(cellX(cells[q]), cellZ(cells[q])));
+    pts.push(new THREE.Vector2(ex, ez));
+    var out = [pts[0]], i = 0;
+    while (i < pts.length - 1) {
+      var j = pts.length - 1;
+      while (j > i + 1 && !lineFree(pts[i], pts[j])) j--;
+      out.push(pts[j]); i = j;
+    }
+    return out;
+  }
+
+  // speech bubble above her head, and a little ring where you tapped
+  var BUB_W = 640, BUB_H = 180, bubbleCanvas = canvas(BUB_W, BUB_H), bubbleTex = canvasTex(bubbleCanvas);
+  var bubbleMat = new THREE.SpriteMaterial({ map: bubbleTex, transparent: true, depthWrite: false, opacity: 0 });
+  var bubble = new THREE.Sprite(bubbleMat);
+  bubble.scale.set(2.4, 2.4 * BUB_H / BUB_W, 1); bubble.visible = false; bubble.renderOrder = 5; scene.add(bubble);
+  var bubbleTime = 0;
+  function say(text, secs) {
+    var g = bubbleCanvas.getContext('2d'), fam = '"Nunito", "Segoe UI", system-ui, sans-serif', size = 58;
+    g.clearRect(0, 0, BUB_W, BUB_H);
+    g.font = '800 ' + size + 'px ' + fam;
+    var w = g.measureText(text).width, maxW = BUB_W - 96;
+    if (w > maxW) { size = Math.floor(size * maxW / w); g.font = '800 ' + size + 'px ' + fam; w = g.measureText(text).width; }
+    var bw = Math.min(BUB_W - 12, w + 76), bx = (BUB_W - bw) / 2, by = 8, bh = 124, mid = BUB_W / 2;
+    g.fillStyle = '#ffffff'; g.strokeStyle = '#e2508a'; g.lineWidth = 6; g.lineJoin = 'round';
+    roundRect(g, bx, by, bw, bh, 46); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(mid - 22, by + bh - 4); g.lineTo(mid, by + bh + 40); g.lineTo(mid + 22, by + bh - 4); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(mid - 22, by + bh); g.lineTo(mid, by + bh + 40); g.lineTo(mid + 22, by + bh); g.stroke();
+    g.fillStyle = '#4a1f3d'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, mid, by + bh / 2 + 4);
+    bubbleTex.needsUpdate = true;
+    bubbleTime = secs;
+  }
+  var tapMark = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.26, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+  tapMark.visible = false; scene.add(tapMark);
+  var tapMarkT = 0;
+  function showTapMark(x, z) { tapMark.position.set(x, groundY(x, z) + 0.025, z); tapMarkT = 1.2; tapMark.visible = true; }
+
+  // what she is doing, and the tour
+  var liveEl = document.getElementById('live');
+  function live(msg) { if (liveEl) liveEl.textContent = msg; }
+  function nameOr(fallback) { return currentName() || fallback; }
+  var spotBtns = Array.prototype.slice.call(document.querySelectorAll('[data-spot]'));
+  function markHere(key) {
+    spotBtns.forEach(function (b) {
+      if (key && b.getAttribute('data-spot') === key) b.setAttribute('aria-current', 'true');
+      else b.removeAttribute('aria-current');
+    });
+  }
+  var camMode = 'free', spinOn = !reduceMotion, followEase = 0;
+  var homePos = camera.position.clone(), homeTarget = controls.target.clone();
+  function setCamMode(m) { camMode = m; if (m === 'follow') followEase = 1.6; syncSpin(); }
+
+  var tourOn = false, tourStep = 0, tourBtn = document.getElementById('tourBtn');
+  function stopTour() { if (!tourOn) return; tourOn = false; tourBtn.textContent = 'Take the tour'; }
+  function startTour() { tourOn = true; tourStep = 0; tourBtn.textContent = 'Stop the tour'; goSpot(TOUR[0], true); }
+  function nextTourStep() {
+    tourStep++;
+    if (tourStep >= TOUR.length) {
+      stopTour();
+      girl.waveT = 1.6; girl.hopT = 0;
+      faceTo(camera.position.x, camera.position.z);
+      say('Thanks for coming!', 3.2);
+      burst(new V3(girl.pos.x, girl.pos.y + 3.2, girl.pos.z), 140, 4.2, PARTY_COLS);
+      live('The tour is finished.');
+      return;
+    }
+    goSpot(TOUR[tourStep], true);
+  }
+  function wrapAngle(a) { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; }
+  function faceTo(x, z) { girl.yawGoal = Math.atan2(x - girl.pos.x, z - girl.pos.z); }
+  function arrive() {
+    var G = girl, sp = G.spot;
+    G.path = null;
+    if (!sp) { G.mode = 'idle'; return; }
+    G.mode = 'greet'; G.timer = 1.7;
+    var cp = camMode === 'guide' ? sp.camV : camera.position;
+    faceTo(cp.x, cp.z);
+    G.waveT = 1.5; G.hopT = 0; G.lookGoal = 0;
+    say(sp.say, 3.4);
+    markHere(sp.key);
+    live(nameOr('The birthday girl') + ' is at ' + sp.label + '.');
+  }
+  function leaveSpot() {
+    var G = girl;
+    G.lookGoal = 0;
+    if (G.blew) { G.blew = false; setTimeout(function () { if (!candlesLit) setCandles(true); }, 1500); }
+  }
+  function blowCandles() {
+    var G = girl;
+    if (!candlesLit) return;
+    G.leanT = 1.0;
+    setTimeout(function () {
+      if (candlesLit && G.spot && G.spot.key === 'cake' && G.mode === 'look') { setCandles(false); G.blew = true; say('Yay!', 1.8); }
+    }, 450);
+  }
+  function goSpot(key, fromTour) {
+    var sp = SPOTS[key], G = girl;
+    if (!sp) return;
+    if (!fromTour) stopTour();
+    leaveSpot();
+    G.spot = sp; G.waveT = 0;
+    setCamMode('guide');
+    markHere(key);
+    var path = findPath(G.pos.x, G.pos.z, sp.stand[0], sp.stand[1]);
+    if (path && path[path.length - 1].distanceTo(path[0]) > 0.05) {
+      G.path = path; G.pi = 1; G.mode = 'walk';
+      live(nameOr('The birthday girl') + ' is walking to ' + sp.label + '.');
+    } else arrive();
+  }
+  function walkTo(x, z) {
+    var G = girl;
+    stopTour(); leaveSpot(); markHere(null);
+    G.spot = null;
+    if (G.mode === 'greet' || G.mode === 'look') G.mode = 'idle';
+    var path = findPath(G.pos.x, G.pos.z, x, z);
+    if (!path) return;
+    var end = path[path.length - 1];
+    showTapMark(end.x, end.y);
+    if (end.distanceTo(path[0]) > 0.05) {
+      G.path = path; G.pi = 1; G.mode = 'walk';
+      live(nameOr('The birthday girl') + ' is walking over.');
+    }
+    if (camMode !== 'follow') setCamMode('follow');
+  }
+  function girlHello() {
+    var G = girl, n = currentName();
+    say(n ? 'Hi, I’m ' + n + '!' : 'Hi there!', 2.6);
+    G.waveT = 1.5; G.hopT = 0;
+    if (G.mode !== 'walk' && G.mode !== 'manual') faceTo(camera.position.x, camera.position.z);
+  }
+
+  // walking, posing and talking, every frame
+  var keys = {}, camDir = new V3();
+  function updateGirl(t, dt) {
+    var G = girl, ix = 0, iz = 0, dirX = 0, dirZ = 0, want = 0, d = 0, wp = null;
+    if (keys.arrowup || keys.w) iz += 1;
+    if (keys.arrowdown || keys.s) iz -= 1;
+    if (keys.arrowright || keys.d) ix += 1;
+    if (keys.arrowleft || keys.a) ix -= 1;
+    if (ix || iz) {
+      if (G.mode !== 'manual') {
+        stopTour(); leaveSpot(); markHere(null);
+        G.mode = 'manual'; G.path = null; G.spot = null;
+        if (camMode !== 'follow') setCamMode('follow');
+      }
+      camera.getWorldDirection(camDir); camDir.y = 0;
+      if (camDir.lengthSq() < 1e-6) camDir.set(0, 0, -1);
+      camDir.normalize();
+      dirX = camDir.x * iz - camDir.z * ix;
+      dirZ = camDir.z * iz + camDir.x * ix;
+      var dl = Math.hypot(dirX, dirZ) || 1;
+      dirX /= dl; dirZ /= dl; want = WALK;
+    } else if (G.mode === 'manual') {
+      G.mode = 'idle';
+    } else if (G.mode === 'walk' && G.path) {
+      while (G.pi < G.path.length && Math.hypot(G.path[G.pi].x - G.pos.x, G.path[G.pi].y - G.pos.z) < 0.01) G.pi++;
+      if (G.pi >= G.path.length) arrive();
+      else {
+        wp = G.path[G.pi];
+        var dx = wp.x - G.pos.x, dz = wp.y - G.pos.z, remain;
+        d = Math.hypot(dx, dz) || 1e-6; dirX = dx / d; dirZ = dz / d; remain = d;
+        for (var k = G.pi + 1; k < G.path.length; k++) remain += G.path[k].distanceTo(G.path[k - 1]);
+        want = Math.min(WALK, 0.5 + remain * 2.0);
+      }
+    }
+    G.speed += (want - G.speed) * Math.min(1, dt * 6);
+    if (want > 0) {
+      var step = Math.max(0.02, G.speed) * dt;
+      G.yawGoal = Math.atan2(dirX, dirZ);
+      if (G.mode === 'manual') {
+        var nx = G.pos.x + dirX * step, nz = G.pos.z + dirZ * step;
+        if (isFree(nx, nz)) { G.pos.x = nx; G.pos.z = nz; }
+        else if (isFree(nx, G.pos.z)) G.pos.x = nx;
+        else if (isFree(G.pos.x, nz)) G.pos.z = nz;
+      } else if (wp) {
+        if (step >= d) {
+          G.pos.x = wp.x; G.pos.z = wp.y; G.pi++;
+          if (G.pi >= G.path.length) arrive();
+        } else { G.pos.x += dirX * step; G.pos.z += dirZ * step; }
+      }
+    }
+
+    var amp = Math.min(1, G.speed / WALK), idle = 1 - amp;
+    G.phase += dt * (2.5 + G.speed * 3.4);
+    var sw = Math.sin(G.phase) * amp;
+    if (G.waveT > 0) G.waveT -= dt;
+    if (G.leanT > 0) G.leanT -= dt;
+    var ease = Math.min(1, dt * 7);
+    G.wave += ((G.waveT > 0 ? 1 : 0) - G.wave) * ease;
+    G.lean += ((G.leanT > 0 ? 1 : 0) - G.lean) * ease;
+    G.look += (G.lookGoal - G.look) * Math.min(1, dt * 4);
+    var hopY = 0;
+    if (G.hopT >= 0) {
+      G.hopT += dt / 0.5;
+      hopY = Math.sin(Math.min(1, G.hopT) * Math.PI) * 0.2;
+      if (G.hopT >= 1) G.hopT = -1;
+    }
+    G.legL.rotation.x = sw * 0.6; G.legR.rotation.x = -sw * 0.6;
+    G.armL.rotation.x = -sw * 0.65;
+    G.armR.rotation.x = sw * 0.65 * (1 - G.wave);
+    G.armR.rotation.z = -0.22 + (-2.35 + Math.sin(t * 11) * 0.35) * G.wave;
+    G.body.position.y = Math.abs(Math.sin(G.phase)) * 0.05 * amp + hopY + Math.sin(t * 2.4) * 0.004 * idle;
+    G.body.rotation.x = 0.07 * amp + 0.2 * G.lean;
+    G.head.rotation.x = -0.42 * G.look - 0.12 * G.lean + Math.sin(t * 1.3) * 0.025 * idle;
+    G.head.rotation.y = Math.sin(t * 0.7) * 0.12 * idle * (1 - Math.min(1, Math.abs(G.look)));
+    G.head.rotation.z = Math.sin(t * 1.1) * 0.03 * idle;
+    G.skirt.rotation.y = sw * 0.06;
+    var pigSw = Math.abs(sw) * 0.25 + Math.sin(t * 2) * 0.04;
+    G.pigs[0].rotation.z = -0.12 - pigSw;
+    G.pigs[1].rotation.z = 0.12 + pigSw;
+    G.blinkT -= dt;
+    var eyeY = 1.15;
+    if (G.blinkT < 0) { eyeY = 0.15; if (G.blinkT < -0.13) G.blinkT = rand(2.2, 5); }
+    G.eyes[0].scale.y = eyeY; G.eyes[1].scale.y = eyeY;
+    G.yaw += wrapAngle(G.yawGoal - G.yaw) * Math.min(1, dt * 8);
+    G.pos.y += (groundY(G.pos.x, G.pos.z) - G.pos.y) * Math.min(1, dt * 14);
+    G.root.position.copy(G.pos);
+    G.root.rotation.y = G.yaw;
+
+    if (G.mode === 'greet' || G.mode === 'look') {
+      G.timer -= dt;
+      if (!G.spot) G.mode = 'idle';
+      else if (G.timer <= 0) {
+        if (G.mode === 'greet') {
+          G.mode = 'look'; G.timer = 1.9;
+          var f = G.spot.featureV;
+          faceTo(f.x, f.z);
+          G.lookGoal = Math.max(-0.6, Math.min(1, (f.y - 1.9) / 2));
+          if (G.spot.action === 'blow') blowCandles();
+        } else {
+          G.mode = 'idle';
+          if (tourOn) nextTourStep();
+        }
+      }
+    }
+
+    bubbleTime -= dt;
+    bubbleMat.opacity += ((bubbleTime > 0 ? 1 : 0) - bubbleMat.opacity) * Math.min(1, dt * 8);
+    bubble.visible = bubbleMat.opacity > 0.01;
+    bubble.position.set(G.pos.x, G.pos.y + 2.95 + G.body.position.y * GIRL_S, G.pos.z);
+    if (tapMarkT > 0) {
+      tapMarkT -= dt;
+      tapMark.visible = tapMarkT > 0;
+      tapMark.material.opacity = Math.min(1, tapMarkT) * 0.9;
+      tapMark.scale.setScalar(1 + (1.2 - tapMarkT) * 0.6);
+    }
+    for (var ri = 0; ri < spotRings.length; ri++) {
+      var sr = spotRings[ri], here = G.spot && G.spot.key === sr.key;
+      sr.m.material.opacity = (here ? 0.8 : 0.32) + 0.14 * Math.sin(t * 2.4 + sr.ph);
+      sr.m.scale.setScalar(1 + 0.05 * Math.sin(t * 2.4 + sr.ph));
+    }
+  }
+
+  // camera: free orbit of the whole party, guided views of each spot, or following her around
+  var cgPos = new V3(), cgLook = new V3(), cPrev = new V3(), cTmp = new V3();
+  function viewScale() { return camera.aspect < 1 ? Math.min(1.8, 0.95 / camera.aspect) : 1; }
+  function updateCamera(dt) {
+    var G = girl, a, vs = viewScale();
+    if (camMode === 'guide') {
+      if (G.mode === 'walk' || !G.spot) {
+        var hx = Math.sin(G.yaw), hz = Math.cos(G.yaw), ol = Math.hypot(G.pos.x, G.pos.z) || 1;
+        var ox = -hx + G.pos.x / ol * 1.2, oz = -hz + G.pos.z / ol * 1.2, odl = Math.hypot(ox, oz) || 1;
+        cgPos.set(G.pos.x + ox / odl * 7.2 * vs, G.pos.y + 3.8 * vs, G.pos.z + oz / odl * 7.2 * vs);
+        cgLook.set(G.pos.x + hx * 0.8, G.pos.y + 1.6, G.pos.z + hz * 0.8);
+      } else {
+        cgLook.copy(G.spot.lookV);
+        cgPos.copy(G.spot.camV).sub(G.spot.lookV).multiplyScalar(vs).add(G.spot.lookV);
+      }
+      a = 1 - Math.exp(-dt * 2.0);
+      camera.position.lerp(cgPos, a);
+      controls.target.lerp(cgLook, a);
+    } else if (camMode === 'follow') {
+      cgLook.set(G.pos.x, G.pos.y + 1.6, G.pos.z);
+      a = 1 - Math.exp(-dt * 3.0);
+      cPrev.copy(controls.target);
+      controls.target.lerp(cgLook, a);
+      camera.position.add(cTmp.copy(controls.target).sub(cPrev));
+      if (followEase > 0) {
+        followEase -= dt;
+        cTmp.copy(camera.position).sub(controls.target);
+        var dist = cTmp.length(), close = 10.5 * vs;
+        if (dist > close + 0.5) { cTmp.setLength(dist + (close - dist) * a); camera.position.copy(controls.target).add(cTmp); }
+      }
+    } else if (camMode === 'overview') {
+      a = 1 - Math.exp(-dt * 2.2);
+      camera.position.lerp(homePos, a);
+      controls.target.lerp(homeTarget, a);
+      if (camera.position.distanceTo(homePos) < 0.08 && controls.target.distanceTo(homeTarget) < 0.08) setCamMode('free');
+    }
+    controls.autoRotate = spinOn && camMode === 'free';
+    controls.update();
+  }
+
+  // arrow keys or WASD walk her around
+  var MOVE_KEYS = { arrowup: 1, arrowdown: 1, arrowleft: 1, arrowright: 1, w: 1, a: 1, s: 1, d: 1 };
+  window.addEventListener('keydown', function (e) {
+    var tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = (e.key || '').toLowerCase();
+    if (!MOVE_KEYS[k]) return;
+    keys[k] = true; e.preventDefault();
+  });
+  window.addEventListener('keyup', function (e) { keys[(e.key || '').toLowerCase()] = false; });
+  window.addEventListener('blur', function () { keys = {}; });
+
+  tourBtn.addEventListener('click', function () { if (tourOn) stopTour(); else startTour(); });
+  spotBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var key = b.getAttribute('data-spot');
+      if (key === 'overview') { stopTour(); markHere(null); setCamMode('overview'); return; }
+      goSpot(key, false);
+    });
+  });
+  setTimeout(girlHello, 1400);
+
+  // ---------------------------------------------------------------- particles: confetti, petals, smoke
+  var _d = new THREE.Object3D(), ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+  function landY(x, z) {
+    var r = Math.hypot(x, z);
+    if (r < 2.56) return tableTop + 0.035;
+    if (r < DECK_R) return DECK + 0.01;
+    if (r < ISLAND) return 0.012;
+    return -9;
+  }
+
+  var CONF_N = 800;
+  var confetti = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.1, 0.055), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, side: THREE.DoubleSide }), CONF_N);
+  confetti.instanceMatrix.setUsage(THREE.DynamicDrawUsage); confetti.frustumCulled = false;
+  var cps = [];
+  for (var ci = 0; ci < CONF_N; ci++) {
+    cps.push({ alive: false, p: new V3(), v: new V3(), r: new THREE.Euler(), w: new V3(), life: 0, landed: false });
+    confetti.setMatrixAt(ci, ZERO); confetti.setColorAt(ci, C(PARTY_COLS[ci % PARTY_COLS.length]));
+  }
+  scene.add(confetti);
+  var confCursor = 0;
+  function burst(origin, n, speed, palette) {
+    for (var i = 0; i < n; i++) {
+      var idx = confCursor; confCursor = (confCursor + 1) % CONF_N;
+      var q = cps[idx];
+      var th = Math.random() * TAU, up = rand(0.35, 1);
+      q.p.copy(origin);
+      q.v.set(Math.cos(th) * Math.sqrt(1 - up * up), up, Math.sin(th) * Math.sqrt(1 - up * up)).multiplyScalar(speed * rand(0.5, 1.15));
+      q.r.set(rand(0, TAU), rand(0, TAU), rand(0, TAU));
+      q.w.set(rand(-9, 9), rand(-9, 9), rand(-9, 9));
+      q.life = rand(4, 6); q.alive = true; q.landed = false;
+      if (palette) confetti.setColorAt(idx, C(pickR(palette)));
+    }
+    confetti.instanceColor.needsUpdate = true;
+  }
+  function shower(n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * TAU, r = Math.sqrt(Math.random()) * 6;
+      burst(new V3(Math.sin(a) * r, rand(7, 10), Math.cos(a) * r), 1, 0.6);
+    }
+  }
+  function updateConfetti(dt) {
+    for (var i = 0; i < CONF_N; i++) {
+      var q = cps[i];
+      if (!q.alive) continue;
+      q.life -= dt;
+      if (q.life <= 0) { q.alive = false; confetti.setMatrixAt(i, ZERO); continue; }
+      if (!q.landed) {
+        q.v.y -= 5.5 * dt;
+        q.v.multiplyScalar(Math.max(0, 1 - 1.8 * dt));
+        q.p.addScaledVector(q.v, dt);
+        q.p.x += Math.sin(q.life * 4 + i) * 0.25 * dt;
+        q.r.x += q.w.x * dt; q.r.y += q.w.y * dt; q.r.z += q.w.z * dt;
+        var gy = landY(q.p.x, q.p.z);
+        if (q.p.y <= gy && q.v.y < 0) {
+          if (gy < -5) { q.alive = false; confetti.setMatrixAt(i, ZERO); continue; }
+          q.p.y = gy; q.landed = true; q.r.set(-Math.PI / 2, 0, Math.random() * TAU);
+          q.life = Math.min(q.life, rand(2.5, 4));
+        }
+      }
+      _d.position.copy(q.p); _d.rotation.copy(q.r);
+      _d.scale.setScalar(q.life < 0.6 ? q.life / 0.6 : 1);
+      _d.updateMatrix(); confetti.setMatrixAt(i, _d.matrix);
+    }
+    confetti.instanceMatrix.needsUpdate = true;
+  }
+
+  var PET_N = reduceMotion ? 60 : 150;
+  var petalMesh = new THREE.InstancedMesh(new THREE.CircleGeometry(0.07, 7).scale(1, 0.62, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7, side: THREE.DoubleSide }), PET_N);
+  petalMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); petalMesh.frustumCulled = false;
+  var petals = [];
+  function spawnPetal(p, anywhere) {
+    var a = Math.random() * TAU, r = Math.sqrt(Math.random()) * 12;
+    p.p.set(Math.sin(a) * r, anywhere ? rand(0.5, 9) : rand(8, 11), Math.cos(a) * r);
+    p.vy = -rand(0.3, 0.6); p.rest = 0;
+  }
+  for (var pi = 0; pi < PET_N; pi++) {
+    var pp = { p: new V3(), r: new THREE.Euler(rand(0, TAU), rand(0, TAU), 0), w: new V3(rand(-2, 2), rand(-2, 2), rand(-2, 2)), ph: rand(0, TAU), vy: 0, rest: 0 };
+    spawnPetal(pp, true); petals.push(pp);
+    petalMesh.setColorAt(pi, C(pickR([0xf9c1d6, 0xf4a6c4, 0xffffff, 0xfcd7e5, 0xe9d6ff])));
+  }
+  scene.add(petalMesh);
+  function updatePetals(t, dt) {
+    var speed = reduceMotion ? 0.5 : 1;
+    for (var i = 0; i < PET_N; i++) {
+      var p = petals[i], s = 1;
+      if (p.rest > 0) {
+        p.rest -= dt;
+        if (p.rest <= 0) spawnPetal(p, false);
+        s = Math.min(1, p.rest / 0.6);
+      } else {
+        p.p.x += (Math.sin(t * 1.3 + p.ph) * 0.35 + 0.12) * dt * speed;
+        p.p.z += Math.cos(t * 1.1 + p.ph) * 0.3 * dt * speed;
+        p.p.y += p.vy * dt * speed;
+        p.r.x += p.w.x * dt * speed; p.r.y += p.w.y * dt * speed; p.r.z += p.w.z * dt * speed;
+        var gy = landY(p.p.x, p.p.z);
+        if (p.p.y <= gy) {
+          if (gy < -5) { spawnPetal(p, false); }
+          else { p.p.y = gy; p.r.set(-Math.PI / 2, 0, Math.random() * TAU); p.rest = rand(3, 7); }
+        }
+      }
+      _d.position.copy(p.p); _d.rotation.copy(p.r); _d.scale.setScalar(Math.max(0.001, s));
+      _d.updateMatrix(); petalMesh.setMatrixAt(i, _d.matrix);
+    }
+    petalMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  var smokeGeo = new THREE.SphereGeometry(0.05, 8, 6), smokes = [];
+  for (var si = 0; si < 24; si++) {
+    var sm = new THREE.Mesh(smokeGeo, new THREE.MeshBasicMaterial({ color: 0xe4dfe8, transparent: true, opacity: 0, depthWrite: false }));
+    sm.visible = false; scene.add(sm); smokes.push({ m: sm, life: 1, max: 1, active: false });
+  }
+  var smokeCursor = 0;
+  function puff(pos, delay) {
+    var s = smokes[smokeCursor]; smokeCursor = (smokeCursor + 1) % smokes.length;
+    s.m.position.copy(pos); s.life = -delay; s.max = rand(1.4, 2.1); s.active = true; s.m.visible = false;
+  }
+  function updateSmoke(dt) {
+    smokes.forEach(function (s, i) {
+      if (!s.active) return;
+      s.life += dt;
+      if (s.life < 0) return;
+      var p = s.life / s.max;
+      if (p >= 1) { s.active = false; s.m.visible = false; return; }
+      s.m.visible = true;
+      s.m.position.y += dt * 0.45;
+      s.m.position.x += Math.sin(s.life * 3 + i) * dt * 0.1;
+      s.m.scale.setScalar(1 + p * 3.2);
+      s.m.material.opacity = 0.55 * (1 - p);
+    });
+  }
+
+  // ---------------------------------------------------------------- sound (made in the browser, no files)
+  var actx = null, master = null;
+  function audio() {
+    try {
+      if (!actx) {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        master = actx.createGain(); master.gain.value = 0.6; master.connect(actx.destination);
+      }
+      if (actx.state === 'suspended') actx.resume();
+      return actx;
+    } catch (e) { return null; }
+  }
+  function noise(dur, freq, type, gain) {
+    var ctx = audio(); if (!ctx) return;
+    var n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+    var g = ctx.createGain(); g.gain.value = gain;
+    src.connect(f); f.connect(g); g.connect(master); src.start();
+  }
+  var NOTE = { G4: 392.0, A4: 440.0, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
+  // "Happy Birthday to You" melody (public domain)
+  var SONG = [['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2],
+    ['G4', .75], ['G4', .25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2],
+    ['G4', .75], ['G4', .25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2],
+    ['F5', .75], ['F5', .25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5]];
+  function chime(ctx, f, t, dur, dest) {
+    var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), g2 = ctx.createGain();
+    o.type = 'triangle'; o.frequency.value = f; o2.type = 'sine'; o2.frequency.value = f * 2; g2.gain.value = 0.22;
+    var end = t + Math.max(0.45, dur * 1.3);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.25, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, end);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(dest || master);
+    o.start(t); o2.start(t); o.stop(end + 0.05); o2.stop(end + 0.05);
+  }
+  var songGain = null;
+  // one pass of the melody through songGain, so stopping the song silences it at once
+  function playSong() {
+    var ctx = audio(); if (!ctx || !songGain) return 0;
+    var t = ctx.currentTime + 0.08, beat = 0.42;
+    SONG.forEach(function (n) { chime(ctx, NOTE[n[0]], t, n[1] * beat, songGain); t += n[1] * beat; });
+    return t - ctx.currentTime;
+  }
+
+  // ---------------------------------------------------------------- interactions
+  var candlesLit = true, flameLevel = 1;
+  var wishBtn = document.getElementById('wish');
+  function setCandles(lit) {
+    if (lit === candlesLit) return;
+    candlesLit = lit;
+    if (!lit) {
+      noise(0.45, 900, 'bandpass', 0.5);
+      flames.forEach(function (f) {
+        for (var i = 0; i < 3; i++) puff(f.base.clone().add(new V3(0, 0.06, 0)), 0.15 + i * 0.18);
+      });
+      setTimeout(function () {
+        burst(new V3(0, cakeTop + 0.8, 0), 180, 5.2, PARTY_COLS);
+        shower(160);
+      }, 350);
+    }
+    wishBtn.textContent = lit ? 'Blow out the candles' : 'Light the candles';
+  }
+  wishBtn.addEventListener('click', function () { setCandles(!candlesLit); });
+
+  document.getElementById('confetti').addEventListener('click', function () {
+    burst(new V3(0, cakeTop + 1, 0), 160, 5.5, PARTY_COLS);
+    burst(new V3(-5.6, 6.2, -2.6), 80, 3.5, PARTY_COLS);
+    burst(new V3(5.6, 6.2, -2.6), 80, 3.5, PARTY_COLS);
+    shower(200);
+    noise(0.2, 2400, 'highpass', 0.25);
+  });
+
+  // the birthday song starts at the first tap or key press and keeps looping until it is stopped
+  var songBtn = document.getElementById('song');
+  var songOn = false, songAuto = true, songStarted = false, songTimer = null;
+  function startSong() {
+    var ctx = audio();
+    if (!ctx) { songBtn.textContent = 'Sound is not available here'; songBtn.disabled = true; return; }
+    songStarted = true; songOn = true;
+    songGain = ctx.createGain(); songGain.gain.value = 0.75; songGain.connect(master);
+    songBtn.textContent = 'Stop the song';
+    loopSong();
+  }
+  function loopSong() {
+    if (!songOn) return;
+    var dur = playSong();
+    songTimer = setTimeout(function () {
+      if (!songOn) return;
+      burst(new V3(0, cakeTop + 1, 0), 70, 4.5, PARTY_COLS);
+      loopSong();
+    }, (dur + 1.2) * 1000);
+  }
+  function stopSong() {
+    songOn = false; clearTimeout(songTimer);
+    if (songGain && actx) {
+      var old = songGain;
+      try { old.gain.setTargetAtTime(0, actx.currentTime, 0.04); } catch (e) { /* already silent */ }
+      setTimeout(function () { try { old.disconnect(); } catch (e) { /* already disconnected */ } }, 400);
+    }
+    songGain = null;
+    songBtn.textContent = 'Play the song';
+  }
+  songBtn.addEventListener('click', function () {
+    if (songOn) { songAuto = false; stopSong(); }
+    else startSong();
+  });
+  function firstGesture(e) {
+    if (songStarted || !songAuto) return;
+    if (e.target && e.target.closest && e.target.closest('#song')) return;
+    startSong();
+  }
+  ['pointerup', 'keydown', 'touchend'].forEach(function (type) { window.addEventListener(type, firstGesture, true); });
+
+  var spinBtn = document.getElementById('spin');
+  function syncSpin() {
+    spinBtn.textContent = spinOn && (camMode === 'free' || camMode === 'overview') ? 'Stop spinning' : 'Spin the view';
+  }
+  spinBtn.addEventListener('click', function () {
+    if (spinOn && (camMode === 'free' || camMode === 'overview')) spinOn = false;
+    else {
+      spinOn = true;
+      if (camMode !== 'free') { stopTour(); markHere(null); setCamMode('overview'); }
+    }
+    syncSpin();
+  });
+  syncSpin();
+
+  // name on the banner
+  // the birthday girl is always Beboy
+  var GIRL_NAME = 'Beboy';
+  function currentName() { return GIRL_NAME; }
+  function drawNamedText() {
+    drawBanner(GIRL_NAME);
+    drawWishSign(GIRL_NAME);
+    labelDraws.forEach(function (f) { f(); });
+  }
+  drawNamedText();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load('700 100px "Dancing Script"'), document.fonts.load('800 48px "Nunito"')]).then(drawNamedText, drawNamedText);
+  }
+
+  // tap to pop balloons or blow out candles
+  var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), el = renderer.domElement;
+  function pickAt(x, y) {
+    var r = el.getBoundingClientRect();
+    ndc.set(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    var hits = ray.intersectObjects(clickables, false);
+    for (var i = 0; i < hits.length; i++) {
+      var u = hits[i].object.userData;
+      if (u.balloon && u.balloon.state !== 'idle') continue;
+      return u;
+    }
+    return null;
+  }
+  function pop(b) {
+    b.state = 'popped'; b.timer = 2.6;
+    b.mesh.visible = false; b.line.visible = false;
+    burst(b.mesh.position.clone(), 70, 3.4, [b.hex, 0xffffff, 0xffd166, 0xf27aa5]);
+    noise(0.12, 2600, 'lowpass', 0.9);
+  }
+  var downX = 0, downY = 0, tookCam = false;
+  var groundPlane = new THREE.Plane(new V3(0, 1, 0), -0.04), hitPoint = new V3();
+  // dragging or zooming hands the camera back to you
+  function userTookCamera() {
+    if (camMode === 'guide') { setCamMode('follow'); followEase = 0; }
+    else if (camMode === 'overview') setCamMode('free');
+    else if (camMode === 'follow') followEase = 0;
+  }
+  el.addEventListener('pointerdown', function (e) { downX = e.clientX; downY = e.clientY; tookCam = false; });
+  el.addEventListener('pointerup', function (e) {
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;
+    var hit = pickAt(e.clientX, e.clientY);
+    if (hit) {
+      if (hit.balloon) pop(hit.balloon);
+      else if (hit.cake) setCandles(!candlesLit);
+      else if (hit.girl) girlHello();
+      else if (hit.spot) goSpot(hit.spot, false);
+      return;
+    }
+    if (ray.ray.intersectPlane(groundPlane, hitPoint) && Math.hypot(hitPoint.x, hitPoint.z) < ISLAND - 0.5) walkTo(hitPoint.x, hitPoint.z);
+  });
+  el.addEventListener('wheel', userTookCamera, { passive: true });
+  var lastHover = 0;
+  el.addEventListener('pointermove', function (e) {
+    if (e.buttons) {
+      if (!tookCam && Math.hypot(e.clientX - downX, e.clientY - downY) > 6) { tookCam = true; userTookCamera(); }
+      return;
+    }
+    if (e.pointerType !== 'mouse') return;
+    var now = performance.now(); if (now - lastHover < 70) return; lastHover = now;
+    el.style.cursor = pickAt(e.clientX, e.clientY) ? 'pointer' : 'grab';
+  });
+  el.style.cursor = 'grab';
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ---------------------------------------------------------------- animation
+  var up = new V3(0, 1, 0), tmp = new V3(), tmp2 = new V3(), knotW = new V3(), qY = new THREE.Quaternion();
+  function easeOutBack(x) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); }
+  function updateBalloons(t, dt) {
+    balloons.forEach(function (b) {
+      if (b.state === 'popped') {
+        b.timer -= dt;
+        if (b.timer <= 0) { b.state = 'grow'; b.grow = 0; b.mesh.visible = true; b.line.visible = true; }
+        return;
+      }
+      var s = 1;
+      if (b.state === 'grow') {
+        b.grow = Math.min(1, b.grow + dt / 0.9);
+        s = Math.max(0.01, easeOutBack(b.grow));
+        if (b.grow >= 1) b.state = 'idle';
+      }
+      var m = b.mesh;
+      m.position.set(
+        b.rest.x + Math.sin(t * 0.6 + b.ph) * 0.15,
+        b.rest.y + Math.sin(t * 0.9 + b.ph * 1.3) * 0.12,
+        b.rest.z + Math.cos(t * 0.5 + b.ph) * 0.15);
+      m.scale.setScalar(s);
+      tmp.copy(m.position).sub(b.anchor).normalize().lerp(up, 0.45).normalize();
+      m.quaternion.setFromUnitVectors(up, tmp);
+      if (b.kind === 'heart') { qY.setFromAxisAngle(up, Math.sin(t * 0.5 + b.ph) * 0.45); m.quaternion.multiply(qY); }
+      knotW.set(0, -0.66 * s, 0).applyQuaternion(m.quaternion).add(m.position);
+      var pos = b.line.geometry.attributes.position, a = b.anchor;
+      var cx = (knotW.x + a.x) / 2 + Math.sin(t * 0.9 + b.ph) * 0.15, cy = (knotW.y + a.y) / 2, cz = (knotW.z + a.z) / 2 + Math.cos(t * 0.7 + b.ph) * 0.15;
+      for (var i = 0; i <= b.N; i++) {
+        var u = i / b.N, iu = 1 - u;
+        pos.setXYZ(i, iu * iu * knotW.x + 2 * iu * u * cx + u * u * a.x, iu * iu * knotW.y + 2 * iu * u * cy + u * u * a.y, iu * iu * knotW.z + 2 * iu * u * cz + u * u * a.z);
+      }
+      pos.needsUpdate = true;
+    });
+  }
+  function updateCandles(t, dt) {
+    flameLevel += ((candlesLit ? 1 : 0) - flameLevel) * Math.min(1, dt * (candlesLit ? 4 : 9));
+    var on = flameLevel > 0.02;
+    flames.forEach(function (f, i) {
+      f.g.visible = on; f.sp.visible = on;
+      var fl = 1 + 0.12 * Math.sin(t * 23 + f.ph) + 0.06 * Math.sin(t * 41 + i * 2);
+      f.g.scale.set(flameLevel, flameLevel * fl, flameLevel);
+      f.g.position.x = f.base.x + Math.sin(t * 17 + f.ph) * 0.006;
+    });
+    glowMat.opacity = flameLevel * (0.8 + 0.2 * Math.sin(t * 19));
+    candleLight.intensity = 0.9 * flameLevel * (0.88 + 0.12 * Math.sin(t * 21) * Math.sin(t * 13));
+  }
+  function updateScenery(t, dt) {
+    for (var i = 0; i < BULBS; i++) {
+      tmpC.copy(bulbBase[i]).multiplyScalar(0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2.2 + i * 1.7)));
+      bulbs.setColorAt(i, tmpC);
+    }
+    bulbs.instanceColor.needsUpdate = true;
+    flags.forEach(function (f) { f.m.rotation.x = Math.sin(t * 2 + f.ph) * 0.18; });
+    clouds.forEach(function (c, i) {
+      c.a += c.sp * dt;
+      c.g.position.set(Math.sin(c.a) * c.r, c.y + Math.sin(t * 0.3 + i) * 0.3, Math.cos(c.a) * c.r);
+    });
+    butterflies.forEach(function (b) {
+      butterflyPos(b, t, b.g.position);
+      butterflyPos(b, t + 0.05, tmp2);
+      b.g.lookAt(tmp2);
+      var flap = Math.sin(t * 18 + b.ph) * 0.8 + 0.25;
+      b.R.rotation.z = flap; b.L.rotation.z = -flap;
+    });
+  }
+
+  var clock = new THREE.Clock();
+  function frame() {
+    var dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    updateBalloons(t, dt);
+    updateCandles(t, dt);
+    updateSmoke(dt);
+    updateConfetti(dt);
+    updatePetals(t, dt);
+    updateScenery(t, dt);
+    updateGirl(t, dt);
+    updateCamera(dt);
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
